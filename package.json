@@ -1,8 +1,11 @@
 {
   "name": "@goodware/mysql-exec",
   "version": "1.0.0",
-  "description": "MySql database connection and statement execution utility for mysql2",
-  "keywords": ["mysql", "mysql2"],
+  "description": "MySql database connection and execution utility for mysql2",
+  "keywords": [
+    "mysql",
+    "mysql2"
+  ],
   "scripts": {
     "lint": "eslint . --fix",
     "prettier": "prettier . --write",
