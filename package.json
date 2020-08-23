@@ -15,7 +15,7 @@
   "main": "MySql.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/good-ware/js-mysql-exec"
+    "url": "https://github.com/good-ware/js-mysql"
   },
   "license": "2BSD",
   "dependencies": {
