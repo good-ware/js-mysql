@@ -1,7 +1,7 @@
 {
-  "name": "@goodware/mysql-exec",
+  "name": "@goodware/mysql",
   "version": "1.0.0",
-  "description": "MySql database connection and execution utility for mysql2",
+  "description": "Database connection and execution utility for the mysql2 npm package",
   "keywords": [
     "mysql",
     "mysql2"
@@ -12,7 +12,7 @@
     "publish": "npm publish --access=public",
     "test": "node tests/test.js"
   },
-  "main": "MySqlExec.js",
+  "main": "MySql.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/good-ware/js-mysql-exec"

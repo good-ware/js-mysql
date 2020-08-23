@@ -7,15 +7,18 @@ const mysql2 = require('mysql2/promise');
 
 /* Testing
  *
- * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code.
- * Search for "Test scenario".
+ * There are currently no unit tests. Instead, only whitebox testing is
+ * performed manually via uncommenting code. Search for "Test scenario".
  */
 
 /**
- * @description Schema for module's options. See also https://github.com/mysqljs/mysql#pool-options.
+ * @description Schema for module's options. See also
+ * https://github.com/mysqljs/mysql#pool-options.
  */
 const optionsSchema = Joi.object({
-  // acquireTimeout: Joi.number().integer().min(0).default(10000).description('Not currently used'),
+  // acquireTimeout:
+  // Joi.number().integer().min(0).default(10000).description('Not currently
+  // used'),
   connectionLimit: Joi.number().integer().min(0).default(10),
   connectTimeout: Joi.number()
     .integer()
@@ -32,8 +35,10 @@ const optionsSchema = Joi.object({
   host: Joi.string().required(),
   keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
   // eslint-disable-next-line quotes
-  maxConnectDelay: Joi.number().integer().min(0).default(100000).description(`Maximum number of milliseconds to wait 
-between connection attempts (starts at 10 ms and increases exponentially)`),
+  maxConnectDelay: Joi.number().integer().min(0).default(100000).description(
+    `Maximum number of milliseconds to wait 
+between connection attempts (starts at 10 ms and increases exponentially)`
+  ),
   multipleStatements: Joi.boolean(),
   password: Joi.string().when('useIAM', {
     is: true,
@@ -54,8 +59,8 @@ between connection attempts (starts at 10 ms and increases exponentially)`),
 });
 
 /**
- * @description Creates mysql2-promise Connection objects, optionally from a pool and optionally manages database
- *  transactions.
+ * @description Creates mysql2-promise Connection objects, optionally from a
+ * pool and optionally manages database transactions.
  *
  * @todo
  * 1. Document retry connection behavior
@@ -69,10 +74,11 @@ between connection attempts (starts at 10 ms and increases exponentially)`),
  *   connectRetryTimeout
  *   stopped
  */
-class MySqlExec {
+class MySql {
   /**
    * @constructor
-   * @description Optionally call checkConnection() afterward to check the connection.
+   * @description Optionally call checkConnection() afterward to check the
+   * connection.
    * @param {Object} options Database connection options
    */
   constructor(options) {
@@ -102,7 +108,8 @@ class MySqlExec {
     };
 
     if (this.useIAM) {
-      // See https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
+      // See
+      // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
       const signer = new AWS.RDS.Signer();
       // eslint-disable-next-line require-jsdoc
       const iamTokenPlugin = () => () =>
@@ -124,8 +131,10 @@ class MySqlExec {
         // acquireTimeout: options.acquireTimeout,
         enableKeepAlive: options.enableKeepAlive,
         keepAliveInitialDelay: options.keepAliveInitialDelay,
-        /* @todo In order for decimals to be returned as numbers instead of strings, add an option
-         * and add this code conditionally. See https://github.com/sidorares/node-mysql2/issues/795
+        /* @todo In order for decimals to be returned as numbers instead of
+        strings, add an option
+         * and add this code conditionally. See
+        https://github.com/sidorares/node-mysql2/issues/795
          * I tried this and it didn't work.
         typeCast: (field, next) => {
           if (field.type === "DECIMAL") {
@@ -144,7 +153,8 @@ class MySqlExec {
   }
 
   /**
-   * @description Closes the connection pool. Subsequent calls to connect() will fail.
+   * @description Closes the connection pool. Subsequent calls to connect() will
+   * fail.
    * @return {Promise}
    */
   stop() {
@@ -166,12 +176,15 @@ class MySqlExec {
   }
 
   /**
-   * @description Acquires a database connection and invokes a function that accepts a mysql2 Connection object.
-   *  Each call to connection.query() etc. is run in a separate transaction.
+   * @description Acquires a database connection and invokes a function that
+   * accepts a mysql2 Connection object. Each call to connection.query() etc. is
+   * run in a separate transaction.
    *
-   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
    * @throws {Error} The error caught while:
    *   1. connecting to the database
    *   2. await task()
@@ -181,13 +194,16 @@ class MySqlExec {
   }
 
   /**
-   * @description Acquires a database connection, begins a transaction on that connection, invokes a function that
-   *  accepts a mysql2 Connection object that uses a shared transaction, and either commits or rolls back the
+   * @description Acquires a database connection, begins a transaction on that
+   * connection, invokes a function that accepts a mysql2 Connection object that
+   * uses a shared transaction, and either commits or rolls back the
    *  transaction, depending on whether the function throws an exception.
    *
-   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
    * @throws {Error} The error caught while:
    *   1. connecting to the database
    *   2. starting a transaction
@@ -199,11 +215,14 @@ class MySqlExec {
   }
 
   /**
-   * @description Internal. Acquires a database connection and invokes a function.
-   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
+   * @description Internal. Acquires a database connection and invokes a
+   * function.
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
    * @param {Object} [logger]
    * @param {Boolean} useTransaction Defaults to true
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
    * @throws {Error} The error caught while:
    *   1. connecting to the database
    *   2. starting a transaction
@@ -213,7 +232,7 @@ class MySqlExec {
   async connect(task, logger, useTransaction = true) {
     if (this.stopped) throw new Error('Stopped');
 
-    if (logger) logger = logger.logger('MySqlExec');
+    if (logger) logger = logger.logger('MySql');
 
     // Loop until connectRetryTimeout is reached. Loop at least once.
     const stopTime = Date.now() + this.connectRetryTimeout;
@@ -301,7 +320,8 @@ class MySqlExec {
         }
 
         if (connection) {
-          // Begin transaction failed; close the connection and try again without waiting
+          // Begin transaction failed; close the connection and try again
+          // without waiting
           if (logger) {
             logger.error({
               message: `Dead connection detected on '${this.connectOptions.host}'`,
@@ -388,4 +408,4 @@ class MySqlExec {
   }
 }
 
-module.exports = MySqlExec;
+module.exports = MySql;
