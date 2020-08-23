@@ -17,7 +17,7 @@
     "type": "git",
     "url": "https://github.com/good-ware/js-mysql"
   },
-  "license": "2BSD",
+  "license": "BSD-2-Clause",
   "dependencies": {
     "aws-sdk": "^2.737.0",
     "humanize-duration": "^3.23.1",
