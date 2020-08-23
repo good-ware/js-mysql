@@ -181,9 +181,9 @@ class MySqlExec {
   }
 
   /**
-   * @description Acquires a database connection, begins a transaction on that connection, invokes a function that accepts a
-   *  mysql2 Connection object that uses a shared transaction, and either commits or rolls back the transaction depending on
-   *  whether the function throws an exception.
+   * @description Acquires a database connection, begins a transaction on that connection, invokes a function that
+   *  accepts a mysql2 Connection object that uses a shared transaction, and either commits or rolls back the
+   *  transaction, depending on whether the function throws an exception.
    *
    * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
@@ -241,7 +241,7 @@ class MySqlExec {
         inTransaction = true;
         // throw new Error('Test scenario 4 - App fails');
         // eslint-disable-next-line no-await-in-loop
-        const ret = await func(connection);
+        const ret = await task(connection);
         // throw new Error('Test scenario 1 - Commit fails');
         // eslint-disable-next-line no-await-in-loop
         if (useTransaction) await connection.commit();
@@ -389,4 +389,3 @@ class MySqlExec {
 }
 
 module.exports = MySqlExec;
-
