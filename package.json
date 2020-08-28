@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Database connection and execution utility for the mysql2 npm package",
   "keywords": [
     "mysql",
@@ -19,7 +19,7 @@
   },
   "license": "BSD-2-Clause",
   "dependencies": {
-    "aws-sdk": "^2.737.0",
+    "aws-sdk": "^2.741.0",
     "humanize-duration": "^3.23.1",
     "joi": "^17.2.1",
     "mysql2": "^2.1.0"
@@ -31,6 +31,6 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
-    "prettier": "^2.0.5"
+    "prettier": "^2.1.1"
   }
 }

@@ -52,7 +52,7 @@ between connection attempts (starts at 10 ms and increases exponentially)`
     then: Joi.string().required(),
     otherwise: Joi.optional(),
   }),
-  ssl: Joi.string().allow(''),
+  ssl: Joi.string(),
   useIAM: Joi.boolean().default(false), // This is logged so default it to false
   user: Joi.string().required(),
   usePool: Joi.boolean(),
