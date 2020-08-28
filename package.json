@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint . --fix",
     "prettier": "prettier . --write",
-    "publish": "npm publish --access=public",
+    "pub": "npm publish --access=public",
     "test": "node tests/test.js"
   },
   "main": "MySql.js",
