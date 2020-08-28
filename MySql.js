@@ -56,7 +56,10 @@ between connection attempts (starts at 10 ms and increases exponentially)`
   useIAM: Joi.boolean().default(false), // This is logged so default it to false
   user: Joi.string().required(),
   usePool: Joi.boolean(),
+  logger: Joi.object(),
 });
+
+const logTag = 'mysql';
 
 /**
  * @description Creates mysql2-promise Connection objects, optionally from a
@@ -231,8 +234,7 @@ class MySql {
    */
   async connect(task, logger, useTransaction = true) {
     if (this.stopped) throw new Error('Stopped');
-
-    if (logger) logger = logger.logger('MySql');
+    if (!logger) logger = this.logger;
 
     // Loop until connectRetryTimeout is reached. Loop at least once.
     const stopTime = Date.now() + this.connectRetryTimeout;
@@ -284,7 +286,7 @@ class MySql {
           if (useTransaction) {
             try {
               if (logger) {
-                logger.warn({
+                logger.log(['warn', logTag], {
                   message: `Rollback transaction on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error,
@@ -295,7 +297,7 @@ class MySql {
               await connection.rollback();
             } catch (error2) {
               if (logger) {
-                logger.error({
+                logger.log(['error', logTag], {
                   message: `Rollback transaction failed on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error: error2,
@@ -306,7 +308,7 @@ class MySql {
                   connection.destroy();
                 } catch (error3) {
                   if (logger) {
-                    logger.error({
+                    logger.log(['error', logTag], {
                       message: `Destroying connection failed on '${this.connectOptions.host}'`,
                       host: this.connectOptions.host,
                       error: error3,
@@ -323,7 +325,7 @@ class MySql {
           // Begin transaction failed; close the connection and try again
           // without waiting
           if (logger) {
-            logger.error({
+            logger.log(['error', logTag], {
               message: `Dead connection detected on '${this.connectOptions.host}'`,
               host: this.connectOptions.host,
               error,
@@ -334,7 +336,7 @@ class MySql {
               connection.destroy();
             } catch (error2) {
               if (logger) {
-                logger.error({
+                logger.log(['error', logTag], {
                   message: `Destroying connection failed on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error: error2,
@@ -372,7 +374,7 @@ class MySql {
           const { host, port, user, database, ssl } = this.connectOptions;
           const { useIAM } = this;
 
-          logger.warn({
+          logger.log(['warn', logTag], {
             message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}' IAM: ${useIAM}`,
             host,
             user,
@@ -395,7 +397,7 @@ class MySql {
             await (this.usePool ? connection.release() : connection.end());
           } catch (error) {
             if (logger) {
-              logger.error({
+              logger.log(['error', logTag], {
                 message: `Releasing connection failed on '${this.connectOptions.host}'`,
                 host: this.connectOptions.host,
                 error,
