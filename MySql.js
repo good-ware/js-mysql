@@ -62,22 +62,23 @@ between connection attempts (starts at 10 ms and increases exponentially)`
 const logTag = 'mysql';
 
 /**
- * @description Creates mysql2-promise Connection objects, optionally from a
- * pool and optionally manages database transactions.
+ * @description Creates mysql2-promise Connections, optionally from a pool. Manages database transactions by wrapping
+ * begin/end around a function invocation.
  *
  * @todo
- * 1. Document retry connection behavior
- *
- * Properties:
- *   connectOptions
- *   usePool
- *   useIAM
- *   connectionPool
- *   maxConnectDelay
- *   connectRetryTimeout
- *   stopped
+ * 1. Document connection retry behavior
  */
 class MySql {
+  /**
+   * Properties:
+   *   {Object} connectOptions
+   *   {Boolean} usePool
+   *   {Boolean} useIAM
+   *   {Object} connectionPool
+   *   {Number} maxConnectDelay
+   *   {Number} connectRetryTimeout
+   *   {Boolean} stopped
+   */
   /**
    * @constructor
    * @description Optionally call checkConnection() afterward to check the
