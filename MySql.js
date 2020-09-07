@@ -1,4 +1,5 @@
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-await-in-loop */
 
 const AWS = require('aws-sdk');
 const humanizeDuration = require('humanize-duration');
@@ -247,25 +248,20 @@ class MySql {
 
       try {
         // 'connection' will be usable if an exception is not thrown
-        // eslint-disable-next-line no-await-in-loop
         connection = await (this.usePool
           ? this.connectionPool.getConnection()
           : mysql2.createConnection(this.connectOptions));
         // throw new Error('Test scenario 3 - Begin fails');
         if (useTransaction) {
-          // eslint-disable-next-line no-await-in-loop
           await connection.beginTransaction();
         } else {
           // Test the connection
-          // eslint-disable-next-line no-await-in-loop
           await connection.query('SELECT 1');
         }
         inTransaction = true;
         // throw new Error('Test scenario 4 - App fails');
-        // eslint-disable-next-line no-await-in-loop
         const ret = await task(connection);
         // throw new Error('Test scenario 1 - Commit fails');
-        // eslint-disable-next-line no-await-in-loop
         if (useTransaction) await connection.commit();
         return ret;
       } catch (error) {
@@ -294,7 +290,6 @@ class MySql {
                 });
               }
               // throw new Error('Test scenario 2 - Rollback fails');
-              // eslint-disable-next-line no-await-in-loop
               await connection.rollback();
             } catch (error2) {
               if (logger) {
@@ -388,13 +383,11 @@ class MySql {
         }
 
         const delay = delayMs;
-        // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => setTimeout(resolve, delay));
       } finally {
         if (connection) {
           try {
             // throw new Error('Test scenario 6 - Release fails');
-            // eslint-disable-next-line no-await-in-loop
             await (this.usePool ? connection.release() : connection.end());
           } catch (error) {
             if (logger) {

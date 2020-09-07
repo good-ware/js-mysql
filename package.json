@@ -1,7 +1,7 @@
 {
   "name": "@goodware/mysql",
-  "version": "1.0.5",
-  "description": "Database connection and execution utility for the mysql2 npm package",
+  "version": "1.0.6",
+  "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
     "mysql2"

@@ -1,4 +1,4 @@
-# mysql2 utility for NodeJS
+# @goodware/mysql: A mysql2-based connection helper
 
 Better Documentation is coming
 
@@ -18,6 +18,6 @@ ECMAScript 2017
 
 # Features
 
-- Creates mysql2-promise Connections, optionally from a pool
+- Creates database connections via mysql2-promise, optionally from a pool, with backoff retry
 - Handles AWS RDS passwordless IAM connections
 - Manages database transactions by wrapping begin/end around a function invocation
