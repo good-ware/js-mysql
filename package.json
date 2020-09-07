@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Database connection and execution utility for the mysql2 npm package",
   "keywords": [
     "mysql",
@@ -10,7 +10,8 @@
     "lint": "eslint . --fix",
     "prettier": "prettier . --write",
     "pub": "npm publish --access=public",
-    "test": "node tests/test.js"
+    "test": "node tests/test.js",
+    "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose -R README.md *.js"
   },
   "main": "MySql.js",
   "repository": {
@@ -19,7 +20,7 @@
   },
   "license": "BSD-2-Clause",
   "dependencies": {
-    "aws-sdk": "^2.741.0",
+    "aws-sdk": "^2.747.0",
     "humanize-duration": "^3.23.1",
     "joi": "^17.2.1",
     "mysql2": "^2.1.0"
@@ -27,10 +28,12 @@
   "devDependencies": {
     "deepmerge": "^4.2.2",
     "dotenv": "^8.2.0",
-    "eslint": "^7.7.0",
+    "eslint": "^7.8.1",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
+    "jsdoc": "^3.6.5",
+    "minami": "^1.2.3",
     "prettier": "^2.1.1"
   }
 }

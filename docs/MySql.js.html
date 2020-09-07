@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>MySql.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MySql.html">MySql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySql.html#checkConnection">checkConnection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySql.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySql.html#execute">execute</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySql.html#stop">stop</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySql.html#transaction">transaction</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#optionsSchema">optionsSchema</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">MySql.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-param-reassign */
+
+const AWS = require('aws-sdk');
+const humanizeDuration = require('humanize-duration');
+const Joi = require('joi');
+const mysql2 = require('mysql2/promise');
+
+/* Testing
+ *
+ * There are currently no unit tests. Instead, only whitebox testing is
+ * performed manually via uncommenting code. Search for "Test scenario".
+ */
+
+/**
+ * @description Schema for module's options. See also
+ * https://github.com/mysqljs/mysql#pool-options.
+ */
+const optionsSchema = Joi.object({
+  // acquireTimeout:
+  // Joi.number().integer().min(0).default(10000).description('Not currently
+  // used'),
+  connectionLimit: Joi.number().integer().min(0).default(10),
+  connectTimeout: Joi.number()
+    .integer()
+    .min(0)
+    .default(10000)
+    .description('Timeout, in milliseconds, to wait for a single database connection'),
+  connectRetryTimeout: Joi.number()
+    .integer()
+    .min(0)
+    .default(5 * 60 * 1000)
+    .description('Timeout, in milliseconds, to retry for a connection in case of connection failures'),
+  database: Joi.string().required(),
+  enableKeepAlive: Joi.boolean(),
+  host: Joi.string().required(),
+  keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
+  // eslint-disable-next-line quotes
+  maxConnectDelay: Joi.number().integer().min(0).default(100000).description(
+    `Maximum number of milliseconds to wait 
+between connection attempts (starts at 10 ms and increases exponentially)`
+  ),
+  multipleStatements: Joi.boolean(),
+  password: Joi.string().when('useIAM', {
+    is: true,
+    then: Joi.optional(),
+    otherwise: Joi.string().required(),
+  }),
+  port: Joi.number().integer().default(3306),
+  queueLimit: Joi.number().integer().min(0).default(0),
+  region: Joi.string().when('useIAM', {
+    is: true,
+    then: Joi.string().required(),
+    otherwise: Joi.optional(),
+  }),
+  ssl: Joi.string(),
+  useIAM: Joi.boolean().default(false), // This is logged so default it to false
+  user: Joi.string().required(),
+  usePool: Joi.boolean(),
+  logger: Joi.object(),
+});
+
+const logTag = 'mysql';
+
+/**
+ * @description Creates mysql2-promise Connections, optionally from a pool. Manages database transactions by wrapping
+ * begin/end around a function invocation.
+ *
+ * @todo
+ * 1. Document connection retry behavior
+ */
+class MySql {
+  /**
+   * Properties:
+   *   {Object} connectOptions
+   *   {Boolean} usePool
+   *   {Boolean} useIAM
+   *   {Object} connectionPool
+   *   {Number} maxConnectDelay
+   *   {Number} connectRetryTimeout
+   *   {Boolean} stopped
+   */
+  /**
+   * @constructor
+   * @description Optionally call checkConnection() afterward to check the
+   * connection.
+   * @param {Object} options Database connection options
+   */
+  constructor(options) {
+    const validation = optionsSchema.validate(options);
+    if (validation.error) throw new Error(validation.error.message);
+    options = validation.value;
+
+    // Initialization that doesn't require async
+    Object.assign(this, {
+      logger: options.logger,
+      usePool: options.usePool,
+      useIAM: options.useIAM,
+      maxConnectDelay: options.maxConnectDelay,
+      connectRetryTimeout: options.connectRetryTimeout,
+    });
+
+    // These are sent to mysql2. Only add properties supported by mysql2.
+    this.connectOptions = {
+      host: options.host,
+      port: options.port,
+      user: options.user,
+      password: options.password,
+      database: options.database,
+      ssl: options.ssl,
+      connectTimeout: options.connectTimeout,
+      multipleStatements: options.multipleStatements,
+    };
+
+    if (this.useIAM) {
+      // See
+      // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
+      const signer = new AWS.RDS.Signer();
+      // eslint-disable-next-line require-jsdoc
+      const iamTokenPlugin = () => () =>
+        signer.getAuthToken({
+          region: options.region,
+          hostname: options.host,
+          port: options.port,
+          username: options.user,
+        });
+
+      this.connectOptions.authPlugins = { mysql_clear_password: iamTokenPlugin };
+    }
+
+    if (this.usePool) {
+      Object.assign(this.connectOptions, {
+        connectionLimit: options.connectionLimit,
+        queueLimit: options.queueLimit,
+        // acquireTimeout is not yet supported by mysql2
+        // acquireTimeout: options.acquireTimeout,
+        enableKeepAlive: options.enableKeepAlive,
+        keepAliveInitialDelay: options.keepAliveInitialDelay,
+        /* @todo In order for decimals to be returned as numbers instead of
+        strings, add an option
+         * and add this code conditionally. See
+        https://github.com/sidorares/node-mysql2/issues/795
+         * I tried this and it didn't work.
+        typeCast: (field, next) => {
+          if (field.type === "DECIMAL") {
+            const value = field.string();
+            return (value === null) ? null : Number(value);
+          }
+          return next();
+        },
+        */
+      });
+
+      this.connectionPool = mysql2.createPool(this.connectOptions);
+    }
+
+    this.stopped = false;
+  }
+
+  /**
+   * @description Closes the connection pool. Subsequent calls to connect() will
+   * fail.
+   * @return {Promise}
+   */
+  stop() {
+    this.stopped = true;
+
+    const pool = this.connectionPool;
+    if (!pool) return 0;
+
+    delete this.connectionPool;
+    return pool.end();
+  }
+
+  /**
+   * @description Runs a bogus SQL statement to check the database connection
+   * @return {Promise}
+   */
+  checkConnection() {
+    return this.connect((connection) => connection.query('SELECT 1'));
+  }
+
+  /**
+   * @description Acquires a database connection and invokes a function that
+   * accepts a mysql2 Connection object. Each call to connection.query() etc. is
+   * run in a separate transaction.
+   *
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
+   * @param {Object} [logger]
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
+   * @throws {Error} The error caught while:
+   *   1. connecting to the database
+   *   2. await task()
+   */
+  execute(task, logger) {
+    return this.connect(task, logger, false);
+  }
+
+  /**
+   * @description Acquires a database connection, begins a transaction on that
+   * connection, invokes a function that accepts a mysql2 Connection object that
+   * uses a shared transaction, and either commits or rolls back the
+   *  transaction, depending on whether the function throws an exception.
+   *
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
+   * @param {Object} [logger]
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
+   * @throws {Error} The error caught while:
+   *   1. connecting to the database
+   *   2. starting a transaction
+   *   3. await task()
+   *   4. committing the transaction
+   */
+  transaction(task, logger) {
+    return this.connect(task, logger);
+  }
+
+  /**
+   * @description Internal. Acquires a database connection and invokes a
+   * function.
+   * @param {Function} task A function that accepts a mysql2 connection object
+   *     as the first parameter
+   * @param {Object} [logger]
+   * @param {Boolean} useTransaction Defaults to true
+   * @return {Promise} The value returned by task(), if the database connection
+   *     is successful
+   * @throws {Error} The error caught while:
+   *   1. connecting to the database
+   *   2. starting a transaction
+   *   3. await task()
+   *   4. committing the transaction
+   */
+  async connect(task, logger, useTransaction = true) {
+    if (this.stopped) throw new Error('Stopped');
+    if (!logger) logger = this.logger;
+
+    // Loop until connectRetryTimeout is reached. Loop at least once.
+    const stopTime = Date.now() + this.connectRetryTimeout;
+    let delayMs = 500;
+
+    for (let first = true; ; first = false) {
+      let connection;
+      let inTransaction;
+
+      try {
+        // 'connection' will be usable if an exception is not thrown
+        // eslint-disable-next-line no-await-in-loop
+        connection = await (this.usePool
+          ? this.connectionPool.getConnection()
+          : mysql2.createConnection(this.connectOptions));
+        // throw new Error('Test scenario 3 - Begin fails');
+        if (useTransaction) {
+          // eslint-disable-next-line no-await-in-loop
+          await connection.beginTransaction();
+        } else {
+          // Test the connection
+          // eslint-disable-next-line no-await-in-loop
+          await connection.query('SELECT 1');
+        }
+        inTransaction = true;
+        // throw new Error('Test scenario 4 - App fails');
+        // eslint-disable-next-line no-await-in-loop
+        const ret = await task(connection);
+        // throw new Error('Test scenario 1 - Commit fails');
+        // eslint-disable-next-line no-await-in-loop
+        if (useTransaction) await connection.commit();
+        return ret;
+      } catch (error) {
+        {
+          const { host, port, user, database, ssl } = this.connectOptions;
+          const { useIAM } = this;
+          error.options = {
+            host,
+            user,
+            port,
+            database,
+            ssl,
+            useIAM,
+          };
+        }
+
+        if (inTransaction) {
+          // Application error or commit failed
+          if (useTransaction) {
+            try {
+              if (logger) {
+                logger.log(['warn', logTag], {
+                  message: `Rollback transaction on '${this.connectOptions.host}'`,
+                  host: this.connectOptions.host,
+                  error,
+                });
+              }
+              // throw new Error('Test scenario 2 - Rollback fails');
+              // eslint-disable-next-line no-await-in-loop
+              await connection.rollback();
+            } catch (error2) {
+              if (logger) {
+                logger.log(['error', logTag], {
+                  message: `Rollback transaction failed on '${this.connectOptions.host}'`,
+                  host: this.connectOptions.host,
+                  error: error2,
+                });
+              }
+              if (this.usePool) {
+                try {
+                  connection.destroy();
+                } catch (error3) {
+                  if (logger) {
+                    logger.log(['error', logTag], {
+                      message: `Destroying connection failed on '${this.connectOptions.host}'`,
+                      host: this.connectOptions.host,
+                      error: error3,
+                    });
+                  }
+                }
+              }
+            }
+          }
+          throw error;
+        }
+
+        if (connection) {
+          // Begin transaction failed; close the connection and try again
+          // without waiting
+          if (logger) {
+            logger.log(['error', logTag], {
+              message: `Dead connection detected on '${this.connectOptions.host}'`,
+              host: this.connectOptions.host,
+              error,
+            });
+          }
+          if (this.usePool) {
+            try {
+              connection.destroy();
+            } catch (error2) {
+              if (logger) {
+                logger.log(['error', logTag], {
+                  message: `Destroying connection failed on '${this.connectOptions.host}'`,
+                  host: this.connectOptions.host,
+                  error: error2,
+                });
+              }
+            }
+          }
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        // Unable to acquire a connection
+        const now = Date.now();
+        if (!first &amp;&amp; now > stopTime) {
+          Object.assign(error, {
+            host: this.connectOptions.host,
+            port: this.connectOptions.port,
+            user: this.connectOptions.user,
+            database: this.connectOptions.database,
+          });
+          throw error;
+        }
+
+        // @todo replace this with backoff package
+        delayMs = Math.min(delayMs * 2, this.maxConnectDelay);
+
+        // Poor man's jitter
+        {
+          let delta = Math.floor(Math.random() * (delayMs / 100));
+          if (Math.random(2) &lt; 0.5) delta = -delta;
+          delayMs += delta;
+        }
+
+        if (logger) {
+          const { host, port, user, database, ssl } = this.connectOptions;
+          const { useIAM } = this;
+
+          logger.log(['warn', logTag], {
+            message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}' IAM: ${useIAM}`,
+            host,
+            user,
+            port,
+            database,
+            ssl,
+            useIAM,
+            error,
+          });
+        }
+
+        const delay = delayMs;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } finally {
+        if (connection) {
+          try {
+            // throw new Error('Test scenario 6 - Release fails');
+            // eslint-disable-next-line no-await-in-loop
+            await (this.usePool ? connection.release() : connection.end());
+          } catch (error) {
+            if (logger) {
+              logger.log(['error', logTag], {
+                message: `Releasing connection failed on '${this.connectOptions.host}'`,
+                host: this.connectOptions.host,
+                error,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+module.exports = MySql;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.5</a> on Mon Sep 07 2020 09:00:46 GMT-0700 (Pacific Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
