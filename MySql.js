@@ -8,13 +8,12 @@ const mysql2 = require('mysql2/promise');
 
 /* Testing
  *
- * There are currently no unit tests. Instead, only whitebox testing is
- * performed manually via uncommenting code. Search for "Test scenario".
+ * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code. Search
+ * for "Test scenario".
  */
 
 /**
- * @description Schema for module's options. See also
- * https://github.com/mysqljs/mysql#pool-options.
+ * @description Schema for module's options. See also https://github.com/mysqljs/mysql#pool-options.
  */
 const optionsSchema = Joi.object({
   // acquireTimeout:
@@ -25,21 +24,24 @@ const optionsSchema = Joi.object({
     .integer()
     .min(0)
     .default(10000)
-    .description('Timeout, in milliseconds, to wait for a single database connection'),
+    .description('Amount of time, in milliseconds, to wait for one database connection request'),
   connectRetryTimeout: Joi.number()
     .integer()
     .min(0)
     .default(5 * 60 * 1000)
-    .description('Timeout, in milliseconds, to retry for a connection in case of connection failures'),
+    .description('Amount of time, in milliseconds, to wait for a successful database connection (including retries)'),
   database: Joi.string().required(),
   enableKeepAlive: Joi.boolean(),
   host: Joi.string().required(),
   keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
   // eslint-disable-next-line quotes
-  maxConnectDelay: Joi.number().integer().min(0).default(100000).description(
-    `Maximum number of milliseconds to wait 
-between connection attempts (starts at 10 ms and increases exponentially)`
-  ),
+  maxConnectDelay: Joi.number()
+    .integer()
+    .min(0)
+    .default(100000)
+    .description(
+      `Maximum number of milliseconds to wait between connection attempts (starts at 10 ms and increases exponentially)`
+    ),
   multipleStatements: Joi.boolean(),
   password: Joi.string().when('useIAM', {
     is: true,
@@ -63,11 +65,9 @@ between connection attempts (starts at 10 ms and increases exponentially)`
 const logTag = 'mysql';
 
 /**
- * @description Creates mysql2-promise Connections, optionally from a pool. Manages database transactions by wrapping
- * begin/end around a function invocation.
- *
- * @todo
- * 1. Document connection retry behavior
+ * @description Creates mysql2-promise Connections, optionally from a pool. If a database connection can not be acquired
+ * due to a timeout specified via the 'connectTimeout' options setting, the methods try again using exponential backoff
+ * with jitter until the 'connectRetryTimeout' options setting is exceeded.
  */
 class MySql {
   /**
@@ -82,8 +82,7 @@ class MySql {
    */
   /**
    * @constructor
-   * @description Optionally call checkConnection() afterward to check the
-   * connection.
+   * @description Optionally call connect() afterward to check the connection
    * @param {Object} options Database connection options
    */
   constructor(options) {
@@ -158,8 +157,7 @@ class MySql {
   }
 
   /**
-   * @description Closes the connection pool. Subsequent calls to connect() will
-   * fail.
+   * @description Closes the connection pool. Subsequent calls to connect(), execute(), transaction() will fail.
    * @return {Promise}
    */
   stop() {
@@ -174,67 +172,60 @@ class MySql {
 
   /**
    * @description Runs a bogus SQL statement to check the database connection
-   * @return {Promise}
+   * @return {Promise} Resolves to true or rejects in case of connection failure
    */
-  checkConnection() {
-    return this.connect((connection) => connection.query('SELECT 1'));
+  connect() {
+    return this.connectForTask((connection) => {
+      connection.query('SELECT 1');
+      return true;
+    });
   }
 
   /**
-   * @description Acquires a database connection and invokes a function that
-   * accepts a mysql2 Connection object. Each call to connection.query() etc. is
-   * run in a separate transaction.
-   *
-   * @param {Function} task A function that accepts a mysql2 connection object
-   *     as the first parameter
+   * @description Acquires a database connection and invokes a function that accepts a mysql2 Connection object. Each
+   * call to connection.query() etc. is run in a separate transaction.
+   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection
-   *     is successful
+   * @return {Promise} The value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
-   *   1. connecting to the database
-   *   2. await task()
+   * 1. connecting to the database
+   * 2. await task()
    */
   execute(task, logger) {
-    return this.connect(task, logger, false);
+    return this.connectForTask(task, logger, false);
   }
 
   /**
-   * @description Acquires a database connection, begins a transaction on that
-   * connection, invokes a function that accepts a mysql2 Connection object that
-   * uses a shared transaction, and either commits or rolls back the
-   *  transaction, depending on whether the function throws an exception.
-   *
-   * @param {Function} task A function that accepts a mysql2 connection object
-   *     as the first parameter
+   * @description Acquires a database connection, begins a transaction on that connection, invokes a function that
+   * accepts a mysql2 Connection object that uses a shared transaction, and either commits or rolls back the
+   * transaction, depending on whether the function throws an exception.
+   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection
-   *     is successful
+   * @return {Promise} The value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
-   *   1. connecting to the database
-   *   2. starting a transaction
-   *   3. await task()
-   *   4. committing the transaction
+   * 1. connecting to the database
+   * 2. starting a transaction
+   * 3. await task()
+   * 4. committing the transaction
    */
   transaction(task, logger) {
-    return this.connect(task, logger);
+    return this.connectForTask(task, logger);
   }
 
   /**
-   * @description Internal. Acquires a database connection and invokes a
-   * function.
-   * @param {Function} task A function that accepts a mysql2 connection object
-   *     as the first parameter
+   * @private
+   * @description Acquires a database connection and invokes a function
+   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
    * @param {Boolean} useTransaction Defaults to true
-   * @return {Promise} The value returned by task(), if the database connection
-   *     is successful
+   * @return {Promise} The value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
-   *   1. connecting to the database
-   *   2. starting a transaction
-   *   3. await task()
-   *   4. committing the transaction
+   * 1. connecting to the database
+   * 2. starting a transaction
+   * 3. await task()
+   * 4. committing the transaction
    */
-  async connect(task, logger, useTransaction = true) {
+  async connectForTask(task, logger, useTransaction = true) {
     if (this.stopped) throw new Error('Stopped');
     if (!logger) logger = this.logger;
 
