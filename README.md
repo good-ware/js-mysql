@@ -1,6 +1,6 @@
 # @goodware/mysql: A mysql2-based connection helper
 
-Better Documentation is coming
+Better documentation is coming
 
 # Links
 
@@ -10,7 +10,7 @@ Better Documentation is coming
 
 # Requirements
 
-ECMAScript 2017
+ES 2017
 
 # Installation
 
@@ -18,6 +18,6 @@ ECMAScript 2017
 
 # Features
 
-- Creates database connections via mysql2-promise, optionally from a pool, with backoff retry
+- Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
 - Handles AWS RDS passwordless IAM connections
 - Manages database transactions by wrapping begin/end around a function invocation

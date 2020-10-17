@@ -13,7 +13,8 @@ const mysql2 = require('mysql2/promise');
  */
 
 /**
- * @description Schema for module's options. See also https://github.com/mysqljs/mysql#pool-options.
+ * @description Schema for the 'options' object passed to MySql's constructor. See also
+ * https://github.com/mysqljs/mysql#pool-options.
  */
 const optionsSchema = Joi.object({
   // acquireTimeout:
@@ -157,7 +158,7 @@ class MySql {
   }
 
   /**
-   * @description Closes the connection pool. Subsequent calls to connect(), execute(), transaction() will fail.
+   * @description Closes the connection pool. Subsequent calls to connect(), execute(), and transaction() will fail.
    * @return {Promise}
    */
   stop() {
@@ -184,7 +185,8 @@ class MySql {
   /**
    * @description Acquires a database connection and invokes a function that accepts a mysql2 Connection object. Each
    * call to connection.query() etc. is run in a separate transaction.
-   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
+   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter and logger as the
+   * second
    * @param {Object} [logger]
    * @return {Promise} The value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
@@ -199,7 +201,8 @@ class MySql {
    * @description Acquires a database connection, begins a transaction on that connection, invokes a function that
    * accepts a mysql2 Connection object that uses a shared transaction, and either commits or rolls back the
    * transaction, depending on whether the function throws an exception.
-   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
+   * @param {Function} task A function that accepts a mysql2 connection object as the first parameter and logger as the
+   * second
    * @param {Object} [logger]
    * @return {Promise} The value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
@@ -251,7 +254,7 @@ class MySql {
         }
         inTransaction = true;
         // throw new Error('Test scenario 4 - App fails');
-        const ret = await task(connection);
+        const ret = await task(connection, logger);
         // throw new Error('Test scenario 1 - Commit fails');
         if (useTransaction) await connection.commit();
         return ret;
