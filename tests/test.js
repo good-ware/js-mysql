@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
-const MySql = require('../MySql');
+const MySqlConnector = require('../MySqlConnector');
 const config = require('./config.js');
 
 function test() {
-  return new MySql(config).connect();
+  return new MySqlConnector(config).connect();
 }
 
 test().then(() => console.log('Successful'), console.error);

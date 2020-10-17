@@ -13,7 +13,7 @@ const mysql2 = require('mysql2/promise');
  */
 
 /**
- * @description Schema for the 'options' object passed to MySql's constructor. See also
+ * @description Schema for the 'options' object passed to MySqlConnector's constructor. See also
  * https://github.com/mysqljs/mysql#pool-options.
  */
 const optionsSchema = Joi.object({
@@ -70,7 +70,7 @@ const logTag = 'mysql';
  * due to a timeout specified via the 'connectTimeout' options setting, the methods try again using exponential backoff
  * with jitter until the 'connectRetryTimeout' options setting is exceeded.
  */
-class MySql {
+class MySqlConnector {
   /**
    * Properties:
    *   {Object} connectOptions
@@ -398,4 +398,4 @@ class MySql {
   }
 }
 
-module.exports = MySql;
+module.exports = MySqlConnector;
