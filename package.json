@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",

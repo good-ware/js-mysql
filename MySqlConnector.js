@@ -248,8 +248,8 @@ class MySqlConnector {
         // throw new Error('Test scenario 3 - Begin fails');
         if (useTransaction) {
           await connection.beginTransaction();
-        } else {
-          // Test the connection
+        } else if (this.usePool) {
+          // Test the connection for staleness
           await connection.query('SELECT 1');
         }
         inTransaction = true;
@@ -382,7 +382,7 @@ class MySqlConnector {
         if (connection) {
           try {
             // throw new Error('Test scenario 6 - Release fails');
-            await (this.usePool ? connection.release() : connection.end());
+            await (this.usePool ? this.connectionPool.releaseConnection(connection) : connection.end());
           } catch (error) {
             if (logger) {
               logger.log(['error', logTag], {
