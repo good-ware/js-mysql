@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const MySqlConnector = require('../MySqlConnector');
+const MySqlConnector = require('../index');
 const config = require('./config.js');
 
 function test() {

@@ -382,7 +382,9 @@ class MySqlConnector {
         if (connection) {
           try {
             // throw new Error('Test scenario 6 - Release fails');
-            await (this.usePool ? this.connectionPool.releaseConnection(connection) : connection.end());
+            // this.connectionPool.releaseConnection(connection) doesn't work despite what mysql2's README says
+            if (this.usePool) connection.release();
+            else await connection.end();
           } catch (error) {
             if (logger) {
               logger.log(['error', logTag], {
