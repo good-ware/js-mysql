@@ -6,11 +6,28 @@ const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 
-/* Testing
+/** 
+ * Testing
  *
  * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code. Search
  * for "Test scenario".
  */
+
+ /**
+  * To Do
+  * 
+  * 1. In order for decimals to be returned as numbers instead of strings, add an option and add this code 
+  *    conditionally. See
+  *     https://github.com/sidorares/node-mysql2/issues/795
+  *     I tried this when creating a new connection and it didn't work:
+  *     typeCast: (field, next) => {
+  *       if (field.type === "DECIMAL") {
+  *         const value = field.string();
+  *         return (value === null) ? null : Number(value);
+  *       }
+  *       return next();
+  *     }
+  */
 
 /**
  * @description Schema for the 'options' object passed to MySqlConnector's constructor. See also
@@ -20,7 +37,7 @@ const optionsSchema = Joi.object({
   // acquireTimeout:
   // Joi.number().integer().min(0).default(10000).description('Not currently
   // used'),
-  connectionLimit: Joi.number().integer().min(0).default(10),
+  connectionLimit: Joi.number().integer().min(0).default(10).description('Only used when usePool is true'),
   connectTimeout: Joi.number()
     .integer()
     .min(0)
@@ -35,6 +52,7 @@ const optionsSchema = Joi.object({
   enableKeepAlive: Joi.boolean(),
   host: Joi.string().required(),
   keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
+  logger: Joi.object(),
   // eslint-disable-next-line quotes
   maxConnectDelay: Joi.number()
     .integer()
@@ -57,10 +75,9 @@ const optionsSchema = Joi.object({
     otherwise: Joi.optional(),
   }),
   ssl: Joi.string(),
-  useIAM: Joi.boolean().default(false), // This is logged so default it to false
+  useIAM: Joi.boolean(),
   user: Joi.string().required(),
   usePool: Joi.boolean(),
-  logger: Joi.object(),
 });
 
 const logTag = 'mysql';
@@ -90,6 +107,8 @@ class MySqlConnector {
     const validation = optionsSchema.validate(options);
     if (validation.error) throw new Error(validation.error.message);
     options = validation.value;
+
+    if (options.useIAM && !options.ssl) options.ssl = 'Amazon RDS';
 
     // Initialization that doesn't require async
     Object.assign(this, {
@@ -133,22 +152,9 @@ class MySqlConnector {
         connectionLimit: options.connectionLimit,
         queueLimit: options.queueLimit,
         // acquireTimeout is not yet supported by mysql2
-        // acquireTimeout: options.acquireTimeout,
+        // acquireTimeout: options.acquireTimeout
         enableKeepAlive: options.enableKeepAlive,
         keepAliveInitialDelay: options.keepAliveInitialDelay,
-        /* @todo In order for decimals to be returned as numbers instead of
-        strings, add an option
-         * and add this code conditionally. See
-        https://github.com/sidorares/node-mysql2/issues/795
-         * I tried this and it didn't work.
-        typeCast: (field, next) => {
-          if (field.type === "DECIMAL") {
-            const value = field.string();
-            return (value === null) ? null : Number(value);
-          }
-          return next();
-        },
-        */
       });
 
       this.connectionPool = mysql2.createPool(this.connectOptions);
