@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "2.0.6",
+  "version": "3.0.1",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -19,7 +19,7 @@
     "url": "https://github.com/good-ware/js-mysql"
   },
   "license": "BSD-2-Clause",
-  "dependencies": {
+  "peerDependencies": {
     "aws-sdk": "^2.0.0",
     "humanize-duration": "^3.0.0",
     "joi": "^17.0.0",
@@ -27,12 +27,12 @@
   },
   "devDependencies": {
     "docs": "^0.3.2-canary.0",
-    "eslint": "^7.11.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-config-prettier": "^6.13.0",
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-import": "^2.22.1",
     "jsdoc": "^3.6.6",
     "minami": "^1.2.3",
-    "prettier": "^2.1.2"
+    "prettier": "^2.2.1"
   }
 }
