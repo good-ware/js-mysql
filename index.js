@@ -77,12 +77,14 @@ const optionsSchema = Joi.object({
 
 /**
  * @private
+ * @ignore
  * @description This tag is always logged
  */
 const logTag = 'mysql';
 
 /**
  * @private
+ * @ignore
  * @description Logs a message
  * @param {Object | Function} logger
  * @param {String[]} tags
@@ -194,7 +196,7 @@ class MySqlConnector {
   }
 
   /**
-   * @description Runs a bogus SQL statement to check the database connection
+   * @description Checks the database connection
    * @param {Object} [logger]
    * @return {Promise} Resolves to true or rejects in case of connection failure
    */
@@ -240,6 +242,7 @@ class MySqlConnector {
 
   /**
    * @private
+   * @ignore
    * @description Acquires a database connection and invokes a function
    * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
