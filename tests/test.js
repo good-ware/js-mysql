@@ -12,7 +12,6 @@ class Logger {
 const logger = new Logger();
 
 const test = async () => {
-  config.host = '17.1.1.1';
   const connector = new MySqlConnector(config, logger.log);
   // Test the connection
   await connector.connect();

@@ -48,9 +48,9 @@ const optionsSchema = Joi.object({
     .min(0)
     .default(5 * 60 * 1000)
     .description('Amount of time, in milliseconds, to wait for a successful database connection (including retries)'),
-  database: Joi.string().required(),
+  database: Joi.string().default('mysql'),
   enableKeepAlive: Joi.boolean(),
-  host: Joi.string().required(),
+  host: Joi.string().default('0.0.0.0'),
   keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
   logger: Joi.alternatives(Joi.object(), Joi.function()),
   // eslint-disable-next-line quotes
@@ -65,14 +65,13 @@ const optionsSchema = Joi.object({
   password: Joi.string().allow(''),
   port: Joi.number().integer().default(3306),
   queueLimit: Joi.number().integer().min(0).default(0),
-  region: Joi.string().when('useIAM', {
+  region: Joi.when('useIAM', {
     is: true,
     then: Joi.string().required(),
-    otherwise: Joi.optional(),
   }),
-  ssl: Joi.string(),
+  ssl: Joi.string().description('When useIAM is true, defaults to Amazon RDS'),
   useIAM: Joi.boolean(),
-  user: Joi.string().required().allow(''),
+  user: Joi.string().default('root').allow(''),
   usePool: Joi.boolean(),
 });
 
