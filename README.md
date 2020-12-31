@@ -16,6 +16,10 @@ ES 2017
 
 `npm i --save @goodware/mysql`
 
+## Breaking change! Peer dependencies for versions 3+
+
+All runtime dependencies in version 3 were changed to use peer dependencies. If you're missing a dependency, upgrade to npm version 7 or add them to your project.
+
 # Features
 
 - Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
