@@ -10,7 +10,13 @@ Better documentation is coming
 
 # Requirements
 
-ES 2017
+- ES5+ (lts/dubnium or later is recommended)
+
+# Features
+
+- Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
+- Handles AWS RDS passwordless IAM connections
+- Manages database transactions by wrapping begin/end around a function invocation
 
 # Installation
 
@@ -24,24 +30,16 @@ If you're missing a dependency, you have three options:
 
 1. Stick with version 2.x
 
-npm i --save @goodware/mysql@2
+`npm i --save @goodware/mysql@2`
 
 Or, in package.json dependencies:
 
 `"@goodware/mysql": "^2.0.0"`
 
 2. Add the missing dependencies to your package.json
-3. upgrade to npm version 7
+3. Upgrade to npm version 7
 
-```shell
-npm i -g npm@7
-```
-
-# Features
-
-- Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
-- Handles AWS RDS passwordless IAM connections
-- Manages database transactions by wrapping begin/end around a function invocation
+`npm i -g npm@7`
 
 # Usage
 
