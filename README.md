@@ -18,7 +18,24 @@ ES 2017
 
 ## Breaking change! Peer dependencies for versions 3+
 
-All runtime dependencies in version 3 were changed to use peer dependencies. If you're missing a dependency, upgrade to npm version 7 or add them to your project.
+All runtime dependencies in version 3 were changed to use peer dependencies.
+
+If you're missing a dependency, you have three options:
+
+1. Stick with version 2.x
+
+npm i --save @goodware/mysql@2
+
+Or, in package.json dependencies:
+
+`"@goodware/mysql": "^2.0.0"`
+
+2. Add the missing dependencies to your package.json
+3. upgrade to npm version 7
+
+```shell
+npm i -g npm@7
+```
 
 # Features
 
@@ -38,8 +55,8 @@ All runtime dependencies in version 3 were changed to use peer dependencies. If 
 2. Call exectue() or transaction(). These accept a function that accepts a mysql2 connection object. The provided functions usually call query() on the connection object.
 3. If you're using connection pooling, call stop() to close all connections. This is necessary if:
 
-a) The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
-b) The app hangs when exiting
+  - The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
+  - The app hangs when exiting
 
 # Logger
 
@@ -64,11 +81,11 @@ const mysql = require('@goodware/mysql');
 const pack = require('../package.json');
 
 const config = {
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'mydb',
+  // host: '0.0.0.0', // This is the default
+  // port: 3306, // This is the default
+  // user: 'root', // This is the default
+  password: 'password',
+  database: 'mysql',
 };
 
 const connector = new mysql(config, console.log); // The second parameter is a logger function
