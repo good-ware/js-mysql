@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "2.0.4",
+  "version": "2.0.6",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -20,15 +20,13 @@
   },
   "license": "BSD-2-Clause",
   "dependencies": {
-    "aws-sdk": "^2.773.0",
-    "docs": "^0.3.2-canary.0",
-    "humanize-duration": "^3.24.0",
-    "joi": "^17.2.1",
-    "mysql2": "^2.2.5"
+    "aws-sdk": "^2.0.0",
+    "humanize-duration": "^3.0.0",
+    "joi": "^17.0.0",
+    "mysql2": "^2.0.0"
   },
   "devDependencies": {
-    "deepmerge": "^4.2.2",
-    "dotenv": "^8.2.0",
+    "docs": "^0.3.2-canary.0",
     "eslint": "^7.11.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.13.0",

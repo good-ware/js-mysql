@@ -6,28 +6,28 @@ const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 
-/** 
+/**
  * Testing
  *
  * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code. Search
  * for "Test scenario".
  */
 
- /**
-  * To Do
-  * 
-  * 1. In order for decimals to be returned as numbers instead of strings, add an option and add this code 
-  *    conditionally. See
-  *     https://github.com/sidorares/node-mysql2/issues/795
-  *     I tried this when creating a new connection and it didn't work:
-  *     typeCast: (field, next) => {
-  *       if (field.type === "DECIMAL") {
-  *         const value = field.string();
-  *         return (value === null) ? null : Number(value);
-  *       }
-  *       return next();
-  *     }
-  */
+/**
+ * To Do
+ *
+ * 1. In order for decimals to be returned as numbers instead of strings, add an option and add this code
+ *    conditionally. See
+ *     https://github.com/sidorares/node-mysql2/issues/795
+ *     I tried this when creating a new connection and it didn't work:
+ *     typeCast: (field, next) => {
+ *       if (field.type === "DECIMAL") {
+ *         const value = field.string();
+ *         return (value === null) ? null : Number(value);
+ *       }
+ *       return next();
+ *     }
+ */
 
 /**
  * @description Schema for the 'options' object passed to MySqlConnector's constructor. See also
@@ -52,7 +52,7 @@ const optionsSchema = Joi.object({
   enableKeepAlive: Joi.boolean(),
   host: Joi.string().required(),
   keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
-  logger: Joi.object(),
+  logger: Joi.alternatives(Joi.object(), Joi.function()),
   // eslint-disable-next-line quotes
   maxConnectDelay: Joi.number()
     .integer()
@@ -62,11 +62,7 @@ const optionsSchema = Joi.object({
       `Maximum number of milliseconds to wait between connection attempts (starts at 10 ms and increases exponentially)`
     ),
   multipleStatements: Joi.boolean(),
-  password: Joi.string().when('useIAM', {
-    is: true,
-    then: Joi.optional(),
-    otherwise: Joi.string().required(),
-  }),
+  password: Joi.string().allow(''),
   port: Joi.number().integer().default(3306),
   queueLimit: Joi.number().integer().min(0).default(0),
   region: Joi.string().when('useIAM', {
@@ -76,11 +72,30 @@ const optionsSchema = Joi.object({
   }),
   ssl: Joi.string(),
   useIAM: Joi.boolean(),
-  user: Joi.string().required(),
+  user: Joi.string().required().allow(''),
   usePool: Joi.boolean(),
 });
 
+/**
+ * @private
+ * @description This tag is always logged
+ */
 const logTag = 'mysql';
+
+/**
+ * @private
+ * @description Logs a message
+ * @param {Object | Function} logger
+ * @param {String[]} tags
+ * @param {Object} message
+ */
+function log(logger, tags, message) {
+  if (typeof logger === 'object') {
+    logger.log(tags, message);
+  } else {
+    logger(tags, message);
+  }
+}
 
 /**
  * @description Creates mysql2-promise Connections, optionally from a pool. If a database connection can not be acquired
@@ -102,8 +117,10 @@ class MySqlConnector {
    * @constructor
    * @description Optionally call connect() afterward to check the connection
    * @param {Object} options Database connection options
+   * @param {Object} [logger]
    */
-  constructor(options) {
+  constructor(options, logger) {
+    if (logger && !options.logger) options = { ...options, logger };
     const validation = optionsSchema.validate(options);
     if (validation.error) throw new Error(validation.error.message);
     options = validation.value;
@@ -179,13 +196,14 @@ class MySqlConnector {
 
   /**
    * @description Runs a bogus SQL statement to check the database connection
+   * @param {Object} [logger]
    * @return {Promise} Resolves to true or rejects in case of connection failure
    */
-  connect() {
+  connect(logger) {
     return this.connectForTask((connection) => {
       connection.query('SELECT 1');
       return true;
-    });
+    }, logger);
   }
 
   /**
@@ -194,7 +212,7 @@ class MySqlConnector {
    * @param {Function} task A function that accepts a mysql2 connection object as the first parameter and logger as the
    * second
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} Resolves to the value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
    * 1. connecting to the database
    * 2. await task()
@@ -210,7 +228,7 @@ class MySqlConnector {
    * @param {Function} task A function that accepts a mysql2 connection object as the first parameter and logger as the
    * second
    * @param {Object} [logger]
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} Resolves to the value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
    * 1. connecting to the database
    * 2. starting a transaction
@@ -227,7 +245,7 @@ class MySqlConnector {
    * @param {Function} task A function that accepts a mysql2 connection object as the first parameter
    * @param {Object} [logger]
    * @param {Boolean} useTransaction Defaults to true
-   * @return {Promise} The value returned by task(), if the database connection is successful
+   * @return {Promise} Resolves to the value returned by task(), if the database connection is successful
    * @throws {Error} The error caught while:
    * 1. connecting to the database
    * 2. starting a transaction
@@ -283,7 +301,7 @@ class MySqlConnector {
           if (useTransaction) {
             try {
               if (logger) {
-                logger.log(['warn', logTag], {
+                log(logger, ['warn', logTag], {
                   message: `Rollback transaction on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error,
@@ -293,7 +311,7 @@ class MySqlConnector {
               await connection.rollback();
             } catch (error2) {
               if (logger) {
-                logger.log(['error', logTag], {
+                log(logger, ['error', logTag], {
                   message: `Rollback transaction failed on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error: error2,
@@ -304,7 +322,7 @@ class MySqlConnector {
                   connection.destroy();
                 } catch (error3) {
                   if (logger) {
-                    logger.log(['error', logTag], {
+                    log(logger, ['error', logTag], {
                       message: `Destroying connection failed on '${this.connectOptions.host}'`,
                       host: this.connectOptions.host,
                       error: error3,
@@ -321,7 +339,7 @@ class MySqlConnector {
           // Begin transaction failed; close the connection and try again
           // without waiting
           if (logger) {
-            logger.log(['error', logTag], {
+            log(logger, ['error', logTag], {
               message: `Dead connection detected on '${this.connectOptions.host}'`,
               host: this.connectOptions.host,
               error,
@@ -332,7 +350,7 @@ class MySqlConnector {
               connection.destroy();
             } catch (error2) {
               if (logger) {
-                logger.log(['error', logTag], {
+                log(logger, ['error', logTag], {
                   message: `Destroying connection failed on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error: error2,
@@ -370,7 +388,7 @@ class MySqlConnector {
           const { host, port, user, database, ssl } = this.connectOptions;
           const { useIAM } = this;
 
-          logger.log(['warn', logTag], {
+          log(logger, ['warn', logTag], {
             message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}' IAM: ${useIAM}`,
             host,
             user,
@@ -393,7 +411,7 @@ class MySqlConnector {
             else await connection.end();
           } catch (error) {
             if (logger) {
-              logger.log(['error', logTag], {
+              log(logger, ['error', logTag], {
                 message: `Releasing connection failed on '${this.connectOptions.host}'`,
                 host: this.connectOptions.host,
                 error,
