@@ -84,8 +84,8 @@ const config = {
   // host: '0.0.0.0', // This is the default
   // port: 3306, // This is the default
   // user: 'root', // This is the default
+  // database: 'mysql', // Ths is the default
   password: 'password',
-  database: 'mysql',
 };
 
 const connector = new mysql(config, console.log); // The second parameter is a logger function
@@ -99,3 +99,4 @@ async () => {
   await connector.stop();
 }().then(console.info, console.error);
 ```
+
