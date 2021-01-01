@@ -10,7 +10,13 @@ Better documentation is coming
 
 # Requirements
 
-ES 2017
+- ES5+ (lts/dubnium or later is recommended)
+
+# Features
+
+- Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
+- Handles AWS RDS passwordless IAM connections
+- Manages database transactions by wrapping begin/end around a function invocation
 
 # Installation
 
@@ -24,24 +30,16 @@ If you're missing a dependency, you have three options:
 
 1. Stick with version 2.x
 
-npm i --save @goodware/mysql@2
+`npm i --save @goodware/mysql@2`
 
 Or, in package.json dependencies:
 
 `"@goodware/mysql": "^2.0.0"`
 
 2. Add the missing dependencies to your package.json
-3. upgrade to npm version 7
+3. Upgrade to npm version 7
 
-```shell
-npm i -g npm@7
-```
-
-# Features
-
-- Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
-- Handles AWS RDS passwordless IAM connections
-- Manages database transactions by wrapping begin/end around a function invocation
+`npm i -g npm@7`
 
 # Usage
 
@@ -49,12 +47,12 @@ npm i -g npm@7
 2. Call exectue() or transaction(). These accept a function that accepts a mysql2-promise connection object. The provided functions usually call query() on the connection object.
 3. If you're using connection pooling, call stop() to close the connections in the pool. This is necessary if:
 
-  - The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
-  - The app hangs instead of terminating
+- The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
+- The app hangs instead of terminating
 
 # Logger
 
-The options provided by the constructor and all other methods accept an optional 'logger' function or object. If an object is provided, it must have the method log():
+The options provided by the constructor and all other methods accept an optional 'logger' function or object. If an object is provided, it must have the method log().
 
 ```js
 interface Logger {
@@ -77,8 +75,9 @@ const config = {
   // host: '0.0.0.0', // This is the default
   // port: 3306, // This is the default
   // user: 'root', // This is the default
-  // database: 'mysql', // Ths is the default
+  // database: 'mysql', // This is the default
   password: 'password',
+  usePool: true, // Defaults to 10 connections (see )
 };
 
 const connector = new mysql(config, console.log); // The second parameter is a logger function
