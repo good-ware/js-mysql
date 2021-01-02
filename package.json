@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -23,7 +23,8 @@
     "aws-sdk": "^2.0.0",
     "humanize-duration": "^3.0.0",
     "joi": "^17.0.0",
-    "mysql2": "^2.0.0"
+    "mysql2": "^2.0.0",
+    "parse-duration": "^0.4.0"
   },
   "devDependencies": {
     "docs": "^0.3.2-canary.0",

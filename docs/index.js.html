@@ -42,32 +42,29 @@
             <pre class="prettyprint source linenums"><code>/* eslint-disable no-param-reassign */
 /* eslint-disable no-await-in-loop */
 
-const AWS = require('aws-sdk');
+const RDS = require('aws-sdk/clients/rds');
 const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
+const parseDuration = require('parse-duration');
 
-/**
- * Testing
+/* Testing
  *
  * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code. Search
  * for "Test scenario".
  */
-
-/**
- * To Do
+/* TODO: (#6)
+ * In order for decimals to be returned as numbers instead of strings, add an option and add this code conditionally.
+ * See https://github.com/sidorares/node-mysql2/issues/795 I tried this when creating a new connection but it didn't
+ * work:
  *
- * 1. In order for decimals to be returned as numbers instead of strings, add an option and add this code
- *    conditionally. See
- *     https://github.com/sidorares/node-mysql2/issues/795
- *     I tried this when creating a new connection and it didn't work:
- *     typeCast: (field, next) => {
- *       if (field.type === "DECIMAL") {
- *         const value = field.string();
- *         return (value === null) ? null : Number(value);
- *       }
- *       return next();
- *     }
+ * typeCast: (field, next) => {
+ *   if (field.type === "DECIMAL") {
+ *     const value = field.string();
+ *     return (value === null) ? null : Number(value);
+ *   }
+ *   return next();
+ * }
  */
 
 /**
@@ -75,45 +72,46 @@ const mysql2 = require('mysql2/promise');
  * https://github.com/mysqljs/mysql#pool-options.
  */
 const optionsSchema = Joi.object({
-  // acquireTimeout:
-  // Joi.number().integer().min(0).default(10000).description('Not currently
-  // used'),
-  connectionLimit: Joi.number().integer().min(0).default(10).description('Only used when usePool is true'),
-  connectTimeout: Joi.number()
-    .integer()
-    .min(0)
+  connectionLimit: Joi.number().integer().min(0).default(10).description(`The maximum number of connections to keep \
+in the connection pool when usePool is true`),
+  connectTimeout: Joi.alternatives(Joi.number().min(0), Joi.string())
     .default(10000)
-    .description('Amount of time, in milliseconds, to wait for one database connection request'),
-  connectRetryTimeout: Joi.number()
-    .integer()
-    .min(0)
+    .description('The amount of time (converted to milliseconds), to wait for one database connection request'),
+  connectRetryTimeout: Joi.alternatives(Joi.number().min(0), Joi.string())
     .default(5 * 60 * 1000)
-    .description('Amount of time, in milliseconds, to wait for a successful database connection (including retries)'),
-  database: Joi.string().default('mysql'),
-  enableKeepAlive: Joi.boolean(),
-  host: Joi.string().default('0.0.0.0'),
-  keepAliveInitialDelay: Joi.number().integer().min(0).default(10000),
-  logger: Joi.alternatives(Joi.object(), Joi.function()),
-  // eslint-disable-next-line quotes
-  maxConnectDelay: Joi.number()
-    .integer()
-    .min(0)
-    .default(100000)
+    // eslint-disable-next-line no-multi-str
     .description(
-      `Maximum number of milliseconds to wait between connection attempts (starts at 10 ms and increases exponentially)`
+      // eslint-disable-next-line no-multi-str
+      'The amount of time (converted to milliseconds), to wait for a successful database connection \
+(including retries)'
     ),
-  multipleStatements: Joi.boolean(),
-  password: Joi.string().allow(''),
-  port: Joi.number().integer().default(3306),
-  queueLimit: Joi.number().integer().min(0).default(0),
+  database: Joi.string().default('mysql').description('Which database (aka schema) to connect to'),
+  enableKeepAlive: Joi.boolean().description(`Used when usePool is true. When this value is true, pooled connections \
+are periodically discarded if they are no longer alive, which also causes them to stay alive.`),
+  host: Joi.string().default('0.0.0.0').description('The database server host name'),
+  keepAliveInitialDelay: Joi.alternatives(Joi.number().min(0), Joi.string()).default(10000).description(`Used when \
+enableKeepAlive is true and specifies how frequently (converted to milliseconds) connections are checked.`),
+  logger: Joi.alternatives(Joi.object(), Joi.function()).description('A logger object or function'),
+  // eslint-disable-next-line quotes
+  maxConnectDelay: Joi.alternatives(Joi.number().min(0), Joi.string()).default(100000).description(
+    `The maximum amount of time (converted to milliseconds) to wait between connection attempts. It starts at 10 ms \
+and increases exponentially.`
+  ),
+  multipleStatements: Joi.boolean().description(`true enables mysql2 connections to run multiple statements (separated \
+by seicolons) via one call to query(), execute(), etc.`),
+  password: Joi.string().allow('').description(`The password for the database server user. Ignored when useIAM is
+true.`),
+  port: Joi.number().integer().default(3306).description('The database server port number'),
+  queueLimit: Joi.number().integer().min(0).default(0).description(`The maximum command queue size for one mysql2 \
+connection`),
   region: Joi.when('useIAM', {
     is: true,
     then: Joi.string().required(),
-  }),
-  ssl: Joi.string().description('When useIAM is true, defaults to Amazon RDS'),
-  useIAM: Joi.boolean(),
-  user: Joi.string().default('root').allow(''),
-  usePool: Joi.boolean(),
+  }).description('Used when useIAM is true. The AWS region name.'),
+  ssl: Joi.string().description(`When useIAM is true, the value defaults to 'Amazon RDS'`),
+  useIAM: Joi.boolean().description('true to use AWS RDS IAM passwordless security'),
+  user: Joi.string().default('root').allow('').description('The database server user name'),
+  usePool: Joi.boolean().description('true enables connection pooling'),
 });
 
 /**
@@ -140,9 +138,11 @@ function log(logger, tags, message) {
 }
 
 /**
- * @description Creates mysql2-promise Connections, optionally from a pool. If a database connection can not be acquired
- * due to a timeout specified via the 'connectTimeout' options setting, the methods try again using exponential backoff
- * with jitter until the 'connectRetryTimeout' options setting is exceeded.
+ * @description Creates mysql2-promise Connection objects, optionally from a pool. If a database connection can not be
+ * acquired due to a timeout specified via the 'connectTimeout' options setting, the methods try again using exponential
+ * backoff with jitter until the 'connectRetryTimeout' options setting is exceeded. All duration-related options values
+ * can be provided as either numbers (milliseconds, including fractions) or as string values that are supported by
+ * [parse-duration](https://www.npmjs.com/package/parse-duration).
  */
 class MySqlConnector {
   /**
@@ -157,15 +157,48 @@ class MySqlConnector {
    */
   /**
    * @constructor
-   * @description Optionally call connect() afterward to check the connection
-   * @param {Object} options Database connection options
-   * @param {Object} [logger]
+   * @description Optionally call connect() afterward to check whether a connection can be acquired
+   * @param {Object} [options] Constructor options. Defaults are used if the provided value is falsy.
+   * @param {Integer} [options.connectionLimit] The maximum number of connections to keep in the connection pool when
+   *   usePool is true. Defaults to 10 connections.
+   * @param {Number|String} [options.connectTimeout] The amount of time (converted to milliseconds), to wait for one
+   *   database connection request
+   * @param {Number|String} [options.connectRetryTimeout] The amount of time (converted to milliseconds), to wait for a
+   *   successful database connection (including retries). Defaults to 5 minutes.
+   * @param {String} [options.database] Which database (aka schema) to connect to. Defaults to mysql.
+   * @param {Boolean} [options.enableKeepAlive] Used when usePool is true. When this value is true, pooled connections
+   *   are periodically discarded if they are no longer alive, which also causes them to stay alive.
+   * @param {String} [options.host] The database server host name. Defaults to 0.0.0.0.
+   * @param {Number|String} [options.keepAliveInitialDelay] Used when enableKeepAlive is true and specifies how
+   *   frequently (converted to milliseconds) connections are checked. Defaults to 10 seconds.
+   * @param {Object|Function} [options.logger] A logger object or function
+   * @param {Number|String} [options.maxConnectDelay] The maximum amount of time (converted to milliseconds) to wait
+   *   between connection attempts. It starts at 10 ms and increases exponentially. Defaults to 100 seconds.
+   * @param {Boolean} [options.multipleStatements] true enables mysql2 connections to run multiple statements (separated
+   *   by seicolons) via one call to query(), execute(), etc.
+   * @param {String} [options.password] The password for the Database server user. Ignored when useIAM is tue.
+   * @param {String} [options.port] The database server port number. Defaults to 3306.
+   * @param {Integer} [options.queueLimit] The maximum command queue size for one mysql2 connection
+   * @param {String} [options.region] Used when useIAM is true. The AWS region name.
+   * @param {String} [options.ssl] When useIAM is true, this value defaults to 'Amazon RDS'
+   * @param {Boolean} [options.useIAM] true to use AWS RDS IAM passwordless security
+   * @param {String} [options.user] The database server user name. Defaults to root.
+   * @param {Boolean} [options.usePool] true enables connection pooling
    */
   constructor(options, logger) {
+    if (!options) options = {};
     if (logger &amp;&amp; !options.logger) options = { ...options, logger };
     const validation = optionsSchema.validate(options);
     if (validation.error) throw new Error(validation.error.message);
     options = validation.value;
+
+    ['connectTimeout', 'connectRetryTimeout', 'keepAliveInitialDelay', 'maxConnectDelay'].forEach((key) => {
+      const value = options[key];
+      if (typeof value === 'number') return;
+      const newValue = parseDuration(value);
+      if (newValue === null || newValue &lt; 0) throw new Error(`Invalid duration for '${key}': ${value}`);
+      options[key] = newValue;
+    });
 
     if (options.useIAM &amp;&amp; !options.ssl) options.ssl = 'Amazon RDS';
 
@@ -193,7 +226,7 @@ class MySqlConnector {
     if (this.useIAM) {
       // See
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
-      const signer = new AWS.RDS.Signer();
+      const signer = new RDS.Signer();
       // eslint-disable-next-line require-jsdoc
       const iamTokenPlugin = () => () =>
         signer.getAuthToken({
@@ -480,7 +513,7 @@ module.exports = MySqlConnector;
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Thu Dec 31 2020 11:24:03 GMT-0800 (Pacific Standard Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Sat Jan 02 2021 10:48:27 GMT-0800 (Pacific Standard Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
