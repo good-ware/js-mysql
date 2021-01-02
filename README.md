@@ -1,7 +1,5 @@
 # @goodware/mysql: A mysql2-based connection helper
 
-Better documentation is coming
-
 # Links
 
 - [npm](https://www.npmjs.com/package/@goodware/mysql)
