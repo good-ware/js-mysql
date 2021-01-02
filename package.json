@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -24,7 +24,7 @@
     "humanize-duration": "^3.0.0",
     "joi": "^17.0.0",
     "mysql2": "^2.0.0",
-    "parse-duration": "^0.0.0"
+    "parse-duration": "^0.4.0"
   },
   "devDependencies": {
     "docs": "^0.3.2-canary.0",
