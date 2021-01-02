@@ -44,7 +44,7 @@ Or, in package.json dependencies:
 # Usage
 
 1. Create an instance of the MySqlConnection class (it is the default export)
-2. Call execute() or transaction(). These accept a function that accepts a mysql2-promise connection object. The provided functions usually call query() on the connection object.
+2. Call execute() or transaction() which accept a function that accepts a mysql2-promise Connection.
 3. If you're using connection pooling, call stop() to close the connections in the pool. This is necessary if:
 
 - The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
