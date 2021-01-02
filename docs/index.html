@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MySqlConnector.html">MySqlConnector</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#connectForTask">connectForTask</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#execute">execute</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#stop">stop</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#transaction">transaction</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#log">log</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#logTag">logTag</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#optionsSchema">optionsSchema</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MySqlConnector.html">MySqlConnector</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#execute">execute</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#stop">stop</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MySqlConnector.html#transaction">transaction</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#optionsSchema">optionsSchema</a></span></li>
 </nav>
 
 <div id="main">
@@ -57,7 +57,17 @@
 <li><a href="https://good-ware.github.io/js-mysql/">API</a></li>
 </ul>
 <h1>Requirements</h1>
-<p>ES 2017</p>
+<ul>
+<li>ES5+ (lts/dubnium or later is recommended)</li>
+</ul>
+<h1>Features</h1>
+<ul>
+<li>Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry</li>
+<li>Handles AWS RDS passwordless IAM connections</li>
+<li>Optionally manages database transactions by wrapping begin end transaction comments around a function invocation</li>
+<li>Same API whether using connection pooling or individual connections</li>
+<li>Same API whether using explicit or implicit transactions</li>
+</ul>
 <h1>Installation</h1>
 <p><code>npm i --save @goodware/mysql</code></p>
 <h2>Breaking change! Peer dependencies for versions 3+</h2>
@@ -66,39 +76,26 @@
 <ol>
 <li>Stick with version 2.x</li>
 </ol>
-<p>npm i --save @goodware/mysql@2</p>
+<p><code>npm i --save @goodware/mysql@2</code></p>
 <p>Or, in package.json dependencies:</p>
 <p><code>&quot;@goodware/mysql&quot;: &quot;^2.0.0&quot;</code></p>
 <ol start="2">
 <li>Add the missing dependencies to your package.json</li>
-<li>upgrade to npm version 7</li>
+<li>Upgrade to npm version 7</li>
 </ol>
-<pre class="prettyprint source lang-shell"><code>npm i -g npm@7
-</code></pre>
-<h1>Features</h1>
-<ul>
-<li>Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry</li>
-<li>Handles AWS RDS passwordless IAM connections</li>
-<li>Manages database transactions by wrapping begin/end around a function invocation</li>
-</ul>
-<h1>Notes</h1>
-<ul>
-<li>mysql2 Connection objects are from mysql2-promise, so their methods execute(), query() etc. return Promises.</li>
-<li>If usePool is true, &quot;await stop()&quot; must be called on the MySqlConnector object if you wish to release the connections
-in the pool. <strong>Letting these objects go out of scope without stopping them will not close the connections.</strong></li>
-</ul>
+<p><code>npm i -g npm@7</code></p>
 <h1>Usage</h1>
 <ol>
-<li>Create an instance of the class that is exported by this module</li>
-<li>Call exectue() or transaction(). These accept a function that accepts a mysql2 connection object. The provided functions usually call query() on the connection object.</li>
-<li>If you're using connection pooling, call stop() to close all connections. This is necessary if:</li>
+<li>Create an instance of the MySqlConnection class (it is the default export)</li>
+<li>Call execute() or transaction(). These accept a function that accepts a mysql2-promise connection object. The provided functions usually call query() on the connection object.</li>
+<li>If you're using connection pooling, call stop() to close the connections in the pool. This is necessary if:</li>
 </ol>
 <ul>
 <li>The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.</li>
-<li>The app hangs when exiting</li>
+<li>The app hangs instead of terminating</li>
 </ul>
 <h1>Logger</h1>
-<p>The options provided by the constructor and all other methods accept an optional 'logger' function or object. If an object is provided, it must have the method log():</p>
+<p>The options provided by the constructor and all other methods accept an optional 'logger' function or object. If an object is provided, it must have the method log().</p>
 <pre class="prettyprint source lang-js"><code>interface Logger {
   /**
    * @param tags Typically includes a logging level name, like info or debug.
@@ -107,28 +104,32 @@ in the pool. <strong>Letting these objects go out of scope without stopping them
   log(tags: string[] | string, message: Record&lt;string, unknown>): void;
 }
 </code></pre>
-<h1>Usage</h1>
+<h1>Example</h1>
 <p>The following program outputs 'success' to the console.</p>
 <pre class="prettyprint source lang-js"><code>const mysql = require('@goodware/mysql');
-const pack = require('../package.json');
 
 const config = {
   // host: '0.0.0.0', // This is the default
   // port: 3306, // This is the default
   // user: 'root', // This is the default
-  // database: 'mysql', This is the default
-  password: '',
+  // database: 'mysql', // This is the default
+  password: 'password',
+  usePool: true, // Defaults to 10 connections (see connectionLimit in constructor options)
 };
 
-const connector = new mysql(config, console.log); // The second parameter is a logger function
-
 async () => {
+  const connector = new mysql(config, console.log); // The second parameter is a logger function
+  // Acquire a database connection
   const result = await connector.execute( async (connection) => {
+    // Perform database operations
     const [results] = await connection.query(`select 'success' AS status`);
+    // The Promise resolves to 'success'
     return results[0].status;
   });
-  console.log(result);
+  // Close all database connections in the pool
   await connector.stop();
+  // The Promise resolves to 'success'
+  return result;
 }().then(console.info, console.error);
 </code></pre></article>
     </section>
@@ -143,7 +144,7 @@ async () => {
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Thu Dec 31 2020 10:55:07 GMT-0800 (Pacific Standard Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Sat Jan 02 2021 10:43:30 GMT-0800 (Pacific Standard Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
