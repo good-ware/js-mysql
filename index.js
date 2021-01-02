@@ -28,7 +28,7 @@ const parseDuration = require('parse-duration');
 
 /**
  * @description Schema for the 'options' object passed to MySqlConnector's constructor. See also
- * https://github.com/mysqljs/mysql#pool-options.
+ * [mysql pool options](https://github.com/mysqljs/mysql#pool-options).
  */
 const optionsSchema = Joi.object({
   connectionLimit: Joi.number().integer().min(0).default(10).description(`The maximum number of connections to keep \
@@ -116,7 +116,8 @@ class MySqlConnector {
    */
   /**
    * @constructor
-   * @description Optionally call connect() afterward to check whether a connection can be acquired
+   * @description Optionally call connect() afterward to check whether a connection can be acquired. See also
+   * [mysql pool options](https://github.com/mysqljs/mysql#pool-options).
    * @param {Object} [options] Constructor options. Defaults are used if the provided value is falsy.
    * @param {Integer} [options.connectionLimit] The maximum number of connections to keep in the connection pool when
    *   usePool is true. Defaults to 10 connections.
@@ -130,7 +131,8 @@ class MySqlConnector {
    * @param {String} [options.host] The database server host name. Defaults to 0.0.0.0.
    * @param {Number|String} [options.keepAliveInitialDelay] Used when enableKeepAlive is true and specifies how
    *   frequently (converted to milliseconds) connections are checked. Defaults to 10 seconds.
-   * @param {Object|Function} [options.logger] A logger object or function
+   * @param {Function|Object} [options.logger] A logger object or function. Can also be provided as the second
+   *   parameter.
    * @param {Number|String} [options.maxConnectDelay] The maximum amount of time (converted to milliseconds) to wait
    *   between connection attempts. It starts at 10 ms and increases exponentially. Defaults to 100 seconds.
    * @param {Boolean} [options.multipleStatements] true enables mysql2 connections to run multiple statements (separated
@@ -143,6 +145,7 @@ class MySqlConnector {
    * @param {Boolean} [options.useIAM] true to use AWS RDS IAM passwordless security
    * @param {String} [options.user] The database server user name. Defaults to root.
    * @param {Boolean} [options.usePool] true enables connection pooling
+   * @param {Function|Object} logger A logger object or function. Can also be provided via options.logger.
    */
   constructor(options, logger) {
     if (!options) options = {};

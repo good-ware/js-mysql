@@ -1,4 +1,4 @@
-# @goodware/mysql: A mysql2-based connection helper
+# @goodware/mysql: A mysql2-promise helper
 
 # Links
 
@@ -13,8 +13,8 @@
 # Features
 
 - Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
-- Handles AWS RDS passwordless IAM connections
-- Optionally manages database transactions by wrapping begin end transaction comments around a function invocation
+- Handles AWS RDS IAM passwordless connections
+- Optionally manages database transactions by wrapping begin end transaction commands around a function invocation, with an exception handler that executes rollback
 - Same API whether using connection pooling or individual connections
 - Same API whether using explicit or implicit transactions
 
