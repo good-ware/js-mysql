@@ -1,12 +1,16 @@
 {
   "tags": {
     "allowUnknownTags": true,
-    "dictionaries": ["jsdoc"]
+    "dictionaries": [
+      "jsdoc"
+    ]
   },
   "source": {
     "excludePattern": "(node_modules|docs)/"
   },
-  "plugins": ["plugins/markdown"],
+  "plugins": [
+    "plugins/markdown"
+  ],
   "templates": {
     "cleverLinks": false,
     "monospaceLinks": true,
@@ -18,6 +22,7 @@
     "encoding": "utf8",
     "private": true,
     "recurse": true,
-    "template": "./node_modules/minami"
+    "template": "./node_modules/minami",
+    "tutorials": "./moredocs"
   }
 }
