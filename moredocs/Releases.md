@@ -2,4 +2,3 @@
 
 - Upgrade to parse-duration 1.0.0
 - Remove use of peer dependencies
-

@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -27,13 +27,12 @@
     "parse-duration": "^1.0.0"
   },
   "devDependencies": {
-    "docs": "^0.3.2-canary.0",
-    "eslint": "^7.16.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-import": "^2.22.1",
-    "jsdoc": "^3.6.6",
-    "minami": "^1.2.3",
-    "prettier": "^2.2.1"
+    "eslint": "*",
+    "eslint-config-airbnb-base": "*",
+    "eslint-config-prettier": "*",
+    "eslint-plugin-import": "*",
+    "jsdoc": "*",
+    "minami": "*",
+    "prettier": "*"
   }
 }
