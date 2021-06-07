@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const MySqlConnector = require('../index');
-const config = require('./config.js');
+const config = require('./config');
 
 class Logger {
   // eslint-disable-next-line class-methods-use-this

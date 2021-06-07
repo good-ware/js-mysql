@@ -52,10 +52,12 @@ are periodically discarded if they are no longer alive, which also causes them t
 enableKeepAlive is true and specifies how frequently (converted to milliseconds) connections are checked.`),
   logger: Joi.alternatives(Joi.object(), Joi.function()).description('A logger object or function'),
   // eslint-disable-next-line quotes
-  maxConnectDelay: Joi.alternatives(Joi.number().min(0), Joi.string()).default(100000).description(
-    `The maximum amount of time (converted to milliseconds) to wait between connection attempts. It starts at 10 ms \
+  maxConnectDelay: Joi.alternatives(Joi.number().min(0), Joi.string())
+    .default(100000)
+    .description(
+      `The maximum amount of time (converted to milliseconds) to wait between connection attempts. It starts at 10 ms \
 and increases exponentially.`
-  ),
+    ),
   multipleStatements: Joi.boolean().description(`true enables mysql2 connections to run multiple statements (separated \
 by seicolons) via one call to query(), execute(), etc.`),
   password: Joi.string().allow('').description(`The password for the database server user. Ignored when useIAM is
