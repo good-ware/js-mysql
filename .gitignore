@@ -4,6 +4,7 @@
 *~
 *.orig
 *.sw*
+package-lock.json
 npm-debug.log
 coverage/
 logs/

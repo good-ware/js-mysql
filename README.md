@@ -1,16 +1,17 @@
 # @goodware/mysql: A mysql2-promise helper
 
-# Links
+## Links
 
+- [Release History](https://good-ware.github.io/js-myql/tutorial-Releases)
 - [npm](https://www.npmjs.com/package/@goodware/mysql)
 - [git](https://github.com/good-ware/js-mysql)
 - [API](https://good-ware.github.io/js-mysql/)
 
-# Requirements
+## Requirements
 
-- ES5+ (lts/dubnium or later is recommended)
+- NodeJS 8+
 
-# Features
+## Features
 
 - Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
 - Handles AWS RDS IAM passwordless connections
@@ -18,30 +19,11 @@
 - Same API whether using connection pooling or individual connections
 - Same API whether using explicit or implicit transactions
 
-# Installation
+## Installation
 
 `npm i --save @goodware/mysql`
 
-## Breaking change! Peer dependencies for versions 3+
-
-All runtime dependencies in version 3 were changed to use peer dependencies.
-
-If you're missing a dependency, you have three options:
-
-1. Stick with version 2.x
-
-`npm i --save @goodware/mysql@2`
-
-Or, in package.json dependencies:
-
-`"@goodware/mysql": "^2.0.0"`
-
-2. Add the missing dependencies to your package.json
-3. Upgrade to npm version 7
-
-`npm i -g npm@7`
-
-# Usage
+## Usage
 
 1. Create an instance of the MySqlConnection class (it is the default export)
 2. Call execute() or transaction() which accept a function that accepts a mysql2-promise Connection.
@@ -50,7 +32,7 @@ Or, in package.json dependencies:
 - The app instantiates multiple instances to access the same database server. It is recommended to use a single global instance to avoid this issue.
 - The app hangs instead of terminating
 
-# Logger
+## Logger
 
 The options provided by the constructor and all other methods accept an optional 'logger' function or object. If an object is provided, it must have the method log().
 
@@ -64,7 +46,7 @@ interface Logger {
 }
 ```
 
-# Example
+## Example
 
 The following program outputs 'success' to the console.
 
