@@ -80,7 +80,7 @@ connection`),
  * @ignore
  * @description This tag is always logged
  */
-const logTag = 'mysql';
+const logTag = 'db';
 
 /**
  * @private
@@ -362,7 +362,7 @@ class MySqlConnector {
                   connection.destroy();
                 } catch (error3) {
                   if (logger) {
-                    log(logger, ['error', logTag], {
+                    log(logger, ['warn', logTag], {
                       message: `Destroying connection failed on '${this.connectOptions.host}'`,
                       host: this.connectOptions.host,
                       error: error3,
@@ -379,7 +379,7 @@ class MySqlConnector {
           // Begin transaction failed; close the connection and try again
           // without waiting
           if (logger) {
-            log(logger, ['error', logTag], {
+            log(logger, ['warn', logTag], {
               message: `Dead connection detected on '${this.connectOptions.host}'`,
               host: this.connectOptions.host,
               error,
@@ -390,7 +390,7 @@ class MySqlConnector {
               connection.destroy();
             } catch (error2) {
               if (logger) {
-                log(logger, ['error', logTag], {
+                log(logger, ['warn', logTag], {
                   message: `Destroying connection failed on '${this.connectOptions.host}'`,
                   host: this.connectOptions.host,
                   error: error2,

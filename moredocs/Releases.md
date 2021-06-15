@@ -1,3 +1,9 @@
+# @goodware/mysql Release History
+
+## 3.0.8 2021-06-07
+
+Log using tag 'db' instead of mysql
+
 ## 3.0.7 2021-06-07
 
 Update documentation
