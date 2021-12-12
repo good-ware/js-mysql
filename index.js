@@ -441,7 +441,7 @@ class MySqlConnector {
         }
 
         const delay = delayMs;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise((resolve) => {setTimeout(resolve, delay)});
       } finally {
         if (connection) {
           try {

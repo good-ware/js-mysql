@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -21,9 +21,9 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "aws-sdk": "^2.0.0",
-    "humanize-duration": "^3.0.0",
+    "humanize-duration": "^3.24.0",
     "joi": "^17.4.0",
-    "mysql2": "^2.0.0",
+    "mysql2": "^2.2.0",
     "parse-duration": "^1.0.0"
   },
   "devDependencies": {
