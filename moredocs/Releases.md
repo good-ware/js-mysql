@@ -2,7 +2,7 @@
 
 ## 4.0.0 2021-12-11
 
-Add mysql as a peer dependency
+Add mysql2 and aws-sdk as peer dependencies
 
 ## 3.0.9 2021-12-11
 
