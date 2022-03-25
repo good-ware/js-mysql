@@ -1,11 +1,12 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-await-in-loop */
 
-const RDS = require('aws-sdk/clients/rds');
 const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 const parseDuration = require('parse-duration');
+
+let RDS;
 
 /* Testing
  *
@@ -188,6 +189,9 @@ class MySqlConnector {
     };
 
     if (this.useIAM) {
+      // eslint-disable-next-line global-require
+      if (!RDS) RDS = require('aws-sdk/clients/rds');
+
       // See
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
       const signer = new RDS.Signer();
@@ -441,7 +445,9 @@ class MySqlConnector {
         }
 
         const delay = delayMs;
-        await new Promise((resolve) => {setTimeout(resolve, delay)});
+        await new Promise((resolve) => {
+          setTimeout(resolve, delay);
+        });
       } finally {
         if (connection) {
           try {

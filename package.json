@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -35,6 +35,8 @@
     "eslint-plugin-import": "*",
     "jsdoc": "*",
     "minami": "*",
-    "prettier": "*"
+    "prettier": "*",
+    "aws-sdk": "^2.0.0",
+    "mysql2": "^2.2.0"
   }
 }
