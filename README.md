@@ -23,8 +23,7 @@
 
 `npm i --save @goodware/mysql`
 
-If you intend to connect to RDS mysql using IAM passwordless login:
-`npm i --save aws-sdk`
+If you don't intend to connect to RDS mysql using IAM passwordless login, you can reduce the size of node_modules by installing modules using `npm ci --no-optional`.
 
 ## Usage
 

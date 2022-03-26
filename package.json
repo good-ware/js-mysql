@@ -1,7 +1,10 @@
 {
   "name": "@goodware/mysql",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "A mysql2-based connection helper",
+  "engines": {
+    "node": ">=8.0"
+  },
   "keywords": [
     "mysql",
     "mysql2"
@@ -25,7 +28,7 @@
     "mysql2": "^2.2.0",
     "parse-duration": "^1.0.0"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "aws-sdk": "^2.0.0"
   },
   "devDependencies": {
@@ -35,7 +38,6 @@
     "eslint-plugin-import": "*",
     "jsdoc": "*",
     "minami": "*",
-    "prettier": "*",
-    "aws-sdk": "^2.0.0"
+    "prettier": "*"
   }
 }

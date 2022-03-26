@@ -7,6 +7,7 @@ const mysql2 = require('mysql2/promise');
 const parseDuration = require('parse-duration');
 
 let RDS;
+let noAwsSdk;
 
 /* Testing
  *
@@ -188,10 +189,22 @@ class MySqlConnector {
       multipleStatements: options.multipleStatements,
     };
 
-    if (this.useIAM) {
-      // eslint-disable-next-line global-require
-      if (!RDS) RDS = require('aws-sdk/clients/rds');
+    if (this.useIAM && !RDS) {
+      if (noAwsSdk) {
+        this.useIAM = false;
+      } else {
+        try {
+          // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+          RDS = require('aws-sdk/clients/rds');
+        } catch (error) {
+          noAwsSdk = true;
+          // eslint-disable-next-line no-console
+          console.error('RDS IAM login requested but aws-sdk is not installed');
+        }
+      }
+    }
 
+    if (this.useIAM) {
       // See
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
       const signer = new RDS.Signer();
