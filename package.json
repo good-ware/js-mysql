@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "A mysql2-based connection helper",
   "keywords": [
     "mysql",
@@ -22,11 +22,11 @@
   "dependencies": {
     "humanize-duration": "^3.24.0",
     "joi": "^17.4.0",
+    "mysql2": "^2.2.0",
     "parse-duration": "^1.0.0"
   },
   "peerDependencies": {
-    "aws-sdk": "^2.0.0",
-    "mysql2": "^2.2.0"
+    "aws-sdk": "^2.0.0"
   },
   "devDependencies": {
     "eslint": "*",
@@ -36,7 +36,6 @@
     "jsdoc": "*",
     "minami": "*",
     "prettier": "*",
-    "aws-sdk": "^2.0.0",
-    "mysql2": "^2.2.0"
+    "aws-sdk": "^2.0.0"
   }
 }

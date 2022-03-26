@@ -21,7 +21,7 @@
 
 ## Installation
 
-`npm i --save mysql2 @goodware/mysql`
+`npm i --save @goodware/mysql`
 
 If you intend to connect to RDS mysql using IAM passwordless login:
 `npm i --save aws-sdk`

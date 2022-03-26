@@ -1,5 +1,9 @@
 # @goodware/mysql Release History
 
+## 4.0.3 2022-03-24
+
+mysql2 is a regular dependency again
+
 ## 4.0.2 2022-03-24
 
 Load aws-sdk only if needed
