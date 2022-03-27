@@ -1,6 +1,6 @@
 # @goodware/mysql Release History
 
-## 4.0.0 - 4.0.4 2022-03-26
+## 4.0.0 - 4.0.5 2022-03-26
 
 - aws-sdk is an optional dependency
 - Load aws-sdk only if needed
