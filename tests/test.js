@@ -4,8 +4,8 @@ const config = require('./config');
 
 class Logger {
   // eslint-disable-next-line class-methods-use-this
-  log(tags, message, extra) {
-    console.log({ tags, message, extra });
+  log(tags, message, data) {
+    console.log({ tags, message, data });
   }
 }
 

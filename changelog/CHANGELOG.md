@@ -1,5 +1,15 @@
 # @goodware/mysql Release History
 
+## 5.0.0 2022-05-09
+
+### Breaking Changes
+
+- Do not default ssl to 'Amazon RDS' when ssl isn't provided
+
+### Other Changes
+
+- Add aws-sdk 2.0 as a dependency (no longer optional)
+
 ## 4.0.0 - 4.0.5 2022-03-26
 
 - aws-sdk is an optional dependency
@@ -21,3 +31,4 @@ Update documentation
 
 - Upgrade to parse-duration 1.0.0
 - Remove use of peer dependencies
+

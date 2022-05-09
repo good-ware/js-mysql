@@ -71,7 +71,7 @@ connection`),
     is: true,
     then: Joi.string().required(),
   }).description('Used when useIAM is true. The AWS region name.'),
-  ssl: Joi.string().description(`When useIAM is true, the value defaults to 'Amazon RDS'`),
+  ssl: Joi.string().description(`Typically 'Amazon RDS'`),
   useIAM: Joi.boolean().description('true to use AWS RDS IAM passwordless security'),
   user: Joi.string().default('root').allow('').description('The database server user name'),
   usePool: Joi.boolean().description('true enables connection pooling'),
@@ -165,8 +165,6 @@ class MySqlConnector {
       if (newValue === null || newValue < 0) throw new Error(`Invalid duration for '${key}': ${value}`);
       options[key] = newValue;
     });
-
-    if (options.useIAM && !options.ssl) options.ssl = 'Amazon RDS';
 
     // Initialization that doesn't require async
     Object.assign(this, {
@@ -442,7 +440,7 @@ class MySqlConnector {
           const { useIAM } = this;
 
           log(logger, ['warn', logTag], {
-            message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}' IAM: ${useIAM}`,
+            message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}'`,
             host,
             user,
             port,
