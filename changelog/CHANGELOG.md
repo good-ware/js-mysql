@@ -1,6 +1,6 @@
 # @goodware/mysql Release History
 
-## 5.0.0 2022-05-09
+## 5.0.0 - 5.0.1 2022-05-09
 
 ### Breaking Changes
 

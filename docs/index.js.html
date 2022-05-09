@@ -103,7 +103,7 @@ and increases exponentially.`
     ),
   multipleStatements: Joi.boolean().description(`true enables mysql2 connections to run multiple statements (separated \
 by seicolons) via one call to query(), execute(), etc.`),
-  password: Joi.string().allow('').description(`The password for the database server user. Ignored when useIAM is
+  password: Joi.string().allow('').description(`The password for the database user. Ignored when useIAM is
 true.`),
   port: Joi.number().integer().default(3306).description('The database server port number'),
   queueLimit: Joi.number().integer().min(0).default(0).description(`The maximum command queue size for one mysql2 \
@@ -114,7 +114,7 @@ connection`),
   }).description('Used when useIAM is true. The AWS region name.'),
   ssl: Joi.string().description(`Typically 'Amazon RDS'`),
   useIAM: Joi.boolean().description('true to use AWS RDS IAM passwordless security'),
-  user: Joi.string().default('root').allow('').description('The database server user name'),
+  user: Joi.string().default('root').allow('').description('The database user name'),
   usePool: Joi.boolean().description('true enables connection pooling'),
 });
 
@@ -182,13 +182,13 @@ class MySqlConnector {
    *   between connection attempts. It starts at 10 ms and increases exponentially. Defaults to 100 seconds.
    * @param {Boolean} [options.multipleStatements] true enables mysql2 connections to run multiple statements (separated
    *   by seicolons) via one call to query(), execute(), etc.
-   * @param {String} [options.password] The password for the Database server user. Ignored when useIAM is tue.
+   * @param {String} [options.password] The password for the database user. Ignored when useIAM is true.
    * @param {String} [options.port] The database server port number. Defaults to 3306.
    * @param {Integer} [options.queueLimit] The maximum command queue size for one mysql2 connection
    * @param {String} [options.region] Used when useIAM is true. The AWS region name.
    * @param {String} [options.ssl] When useIAM is true, this value defaults to 'Amazon RDS'
    * @param {Boolean} [options.useIAM] true to use AWS RDS IAM passwordless security
-   * @param {String} [options.user] The database server user name. Defaults to root.
+   * @param {String} [options.user] The database user name. Defaults to root.
    * @param {Boolean} [options.usePool] true enables connection pooling
    * @param {Function|Object} logger A logger object or function. Can also be provided via options.logger.
    */
@@ -207,28 +207,21 @@ class MySqlConnector {
       options[key] = newValue;
     });
 
-    // Initialization that doesn't require async
-    Object.assign(this, {
-      logger: options.logger,
-      usePool: options.usePool,
-      useIAM: options.useIAM,
-      maxConnectDelay: options.maxConnectDelay,
-      connectRetryTimeout: options.connectRetryTimeout,
-    });
+    const { region, host, port, user, useIAM, usePool } = options;
 
     // These are sent to mysql2. Only add properties supported by mysql2.
-    this.connectOptions = {
-      host: options.host,
-      port: options.port,
-      user: options.user,
-      password: options.password,
+    const connectOptions = {
+      host,
+      port,
+      user,
       database: options.database,
-      ssl: options.ssl,
       connectTimeout: options.connectTimeout,
       multipleStatements: options.multipleStatements,
     };
 
-    if (this.useIAM &amp;&amp; !RDS &amp;&amp; !noAwsSdk) {
+    if (options.ssl) connectOptions.ssl = options.ssl;
+
+    if (useIAM &amp;&amp; !RDS &amp;&amp; !noAwsSdk) {
       try {
         // eslint-disable-next-line global-require, import/no-extraneous-dependencies
         RDS = require('aws-sdk/clients/rds');
@@ -239,24 +232,38 @@ class MySqlConnector {
       }
     }
 
-    if (this.useIAM &amp;&amp; RDS) {
+    if (useIAM &amp;&amp; RDS) {
       // See
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
       const signer = new RDS.Signer();
       // eslint-disable-next-line require-jsdoc
       const iamTokenPlugin = () => () =>
+        // Only reference local variables in this lambda (no other objects)
         signer.getAuthToken({
-          region: options.region,
-          hostname: options.host,
-          port: options.port,
-          username: options.user,
+          region,
+          hostname: host,
+          port,
+          username: user,
         });
 
-      this.connectOptions.authPlugins = { mysql_clear_password: iamTokenPlugin };
+      connectOptions.authPlugins = { mysql_clear_password: iamTokenPlugin };
+    } else {
+      connectOptions.password = options.password;
     }
 
-    if (this.usePool) {
-      Object.assign(this.connectOptions, {
+    // Initialization that doesn't require async
+    Object.assign(this, {
+      connectOptions,
+      logger: options.logger,
+      usePool,
+      useIAM,
+      maxConnectDelay: options.maxConnectDelay,
+      connectRetryTimeout: options.connectRetryTimeout,
+      stopped: false,
+    });
+
+    if (usePool) {
+      Object.assign(connectOptions, {
         connectionLimit: options.connectionLimit,
         queueLimit: options.queueLimit,
         // acquireTimeout is not yet supported by mysql2
@@ -265,10 +272,8 @@ class MySqlConnector {
         keepAliveInitialDelay: options.keepAliveInitialDelay,
       });
 
-      this.connectionPool = mysql2.createPool(this.connectOptions);
+      this.connectionPool = mysql2.createPool(connectOptions);
     }
-
-    this.stopped = false;
   }
 
   /**
@@ -395,7 +400,6 @@ class MySqlConnector {
               if (logger) {
                 log(logger, ['warn', logTag], {
                   message: `Rollback transaction on '${this.connectOptions.host}'`,
-                  host: this.connectOptions.host,
                   error,
                 });
               }
@@ -405,7 +409,6 @@ class MySqlConnector {
               if (logger) {
                 log(logger, ['error', logTag], {
                   message: `Rollback transaction failed on '${this.connectOptions.host}'`,
-                  host: this.connectOptions.host,
                   error: error2,
                 });
               }
@@ -416,7 +419,6 @@ class MySqlConnector {
                   if (logger) {
                     log(logger, ['warn', logTag], {
                       message: `Destroying connection failed on '${this.connectOptions.host}'`,
-                      host: this.connectOptions.host,
                       error: error3,
                     });
                   }
@@ -433,7 +435,6 @@ class MySqlConnector {
           if (logger) {
             log(logger, ['warn', logTag], {
               message: `Dead connection detected on '${this.connectOptions.host}'`,
-              host: this.connectOptions.host,
               error,
             });
           }
@@ -444,7 +445,6 @@ class MySqlConnector {
               if (logger) {
                 log(logger, ['warn', logTag], {
                   message: `Destroying connection failed on '${this.connectOptions.host}'`,
-                  host: this.connectOptions.host,
                   error: error2,
                 });
               }
@@ -477,17 +477,10 @@ class MySqlConnector {
         }
 
         if (logger) {
-          const { host, port, user, database, ssl } = this.connectOptions;
-          const { useIAM } = this;
+          const { host, port, user, database } = this.connectOptions;
 
           log(logger, ['warn', logTag], {
             message: `Waiting ${humanizeDuration(delayMs)} for '${user}@${host}:${port}/${database}'`,
-            host,
-            user,
-            port,
-            database,
-            ssl,
-            useIAM,
             error,
           });
         }
@@ -507,7 +500,6 @@ class MySqlConnector {
             if (logger) {
               log(logger, ['error', logTag], {
                 message: `Releasing connection failed on '${this.connectOptions.host}'`,
-                host: this.connectOptions.host,
                 error,
               });
             }
@@ -531,7 +523,7 @@ module.exports = MySqlConnector;
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Mon May 09 2022 11:16:40 GMT-0700 (Pacific Daylight Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Mon May 09 2022 13:39:16 GMT-0700 (Pacific Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
