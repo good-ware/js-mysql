@@ -1,5 +1,9 @@
 # @goodware/mysql Release History
 
+## 5.0.2 2022-05-10
+
+Allow ssl to be an empty string
+
 ## 5.0.0 - 5.0.1 2022-05-09
 
 ### Breaking Changes
