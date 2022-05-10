@@ -5,6 +5,6 @@ module.exports = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   region: process.env.DB_AWS_REGION || process.env.AWS_DEFAULT_REGION,
-  ssl: process.env.DB_SSL,
+  ssl: '', // process.env.DB_SSL,
   useIAM: process.env.DB_USE_IAM,
 };

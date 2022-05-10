@@ -14,7 +14,7 @@
     "lint": "eslint . --fix",
     "format": "prettier . --write",
     "pub": "npm publish --access=public",
-    "test": "node tests/test.js",
+    "test": "node tests",
     "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose -R README.md *.js"
   },
   "main": "index.js",
