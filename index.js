@@ -178,7 +178,7 @@ class MySqlConnector {
       multipleStatements: options.multipleStatements,
     };
 
-    if (options.ssl) connectOptions.ssl = options.ssl;
+    if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
 
     if (useIAM && !RDS && !noAwsSdk) {
       try {
