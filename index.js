@@ -71,7 +71,7 @@ connection`),
     is: true,
     then: Joi.string().required(),
   }).description('Used when useIAM is true. The AWS region name.'),
-  ssl: Joi.string().allow('').description(`Typically 'Amazon RDS'`),
+  ssl: Joi.string().description(`Typically 'Amazon RDS'`),
   useIAM: Joi.boolean().description('true to use AWS RDS IAM passwordless security'),
   user: Joi.string().default('root').allow('').description('The database user name'),
   usePool: Joi.boolean().description('true enables connection pooling'),
@@ -342,14 +342,14 @@ class MySqlConnector {
         {
           const { host, port, user, database, ssl } = this.connectOptions;
           const { useIAM } = this;
-          error.options = {
+          error.options = JSON.stringify({
             host,
             user,
             port,
             database,
             ssl,
             useIAM,
-          };
+          });
         }
 
         if (inTransaction) {

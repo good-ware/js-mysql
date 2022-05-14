@@ -1,5 +1,9 @@
 # @goodware/mysql Release History
 
+## 5.0.4 2022-05-14
+
+Roll back previous change. Do not allow ssl to be an empty string. mysql2 doesn't allow it.
+
 ## 5.0.3 2022-05-10
 
 Allow ssl to be an empty string
