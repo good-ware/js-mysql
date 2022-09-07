@@ -145,7 +145,7 @@ class MySqlConnector {
    * @param {String} [options.port] The database server port number. Defaults to 3306.
    * @param {Integer} [options.queueLimit] The maximum command queue size for one mysql2 connection
    * @param {String} [options.region] Used when useIAM is true. The AWS region name.
-   * @param {String} [options.ssl] When useIAM is true, this value defaults to 'Amazon RDS'
+   * @param {String} [options.ssl] Typically 'Amazon RDS' when needed
    * @param {Boolean} [options.useIAM] true to use AWS RDS IAM passwordless security
    * @param {String} [options.user] The database user name. Defaults to root.
    * @param {Boolean} [options.usePool] true enables connection pooling
