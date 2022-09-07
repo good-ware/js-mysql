@@ -18,6 +18,8 @@ Allow ssl to be an empty string
 
 - Do not default ssl to 'Amazon RDS' when ssl isn't provided
 
+This fixes an issue particularly for AWS China where ssl is not supported by IAM passwordless login. In other words, for the constructor options, `useIAM` is `true` and ssl is unspecified. In previous releases, ssl was automatically set to Amazon RDS when useIAM was specified.
+
 ### Other Changes
 
 - Add aws-sdk 2.0 as a dependency (no longer optional)
