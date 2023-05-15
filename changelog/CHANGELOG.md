@@ -1,5 +1,9 @@
 # @goodware/mysql Release History
 
+## 5.1.0 2023-05-15
+
+Use @aws-sdk version 3 for RDS IAM login. Unlike previous versions, this is a required dependency, which isn't as bad now that the SDK has been broken down into smaller pieces.
+
 ## 5.0.5 2022-09-07
 
 Update documentation

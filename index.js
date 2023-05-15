@@ -1,19 +1,18 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-await-in-loop */
 
+const { Signer } = require('@aws-sdk/rds-signer');
 const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 const parseDuration = require('parse-duration');
-
-let RDS;
-let noAwsSdk;
 
 /* Testing
  *
  * There are currently no unit tests. Instead, only whitebox testing is performed manually via uncommenting code. Search
  * for "Test scenario".
  */
+
 /* TODO: (#6)
  * In order for decimals to be returned as numbers instead of strings, add an option and add this code conditionally.
  * See https://github.com/sidorares/node-mysql2/issues/795 I tried this when creating a new connection but it didn't
@@ -180,32 +179,17 @@ class MySqlConnector {
 
     if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
 
-    if (useIAM && !RDS && !noAwsSdk) {
-      try {
-        // eslint-disable-next-line global-require, import/no-extraneous-dependencies
-        RDS = require('aws-sdk/clients/rds');
-      } catch (error) {
-        noAwsSdk = true;
-        // eslint-disable-next-line no-console
-        console.error(`RDS IAM login requested but aws-sdk is not installed: ${error.message}`);
-      }
-    }
-
-    if (useIAM && RDS) {
-      // See
+    if (useIAM) {
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
-      const signer = new RDS.Signer();
-      // eslint-disable-next-line require-jsdoc
-      const iamTokenPlugin = () => () =>
-        // Only reference local variables in this lambda (no other objects)
-        signer.getAuthToken({
-          region,
-          hostname: host,
-          port,
-          username: user,
-        });
+      const signer = new Signer({
+        region,
+        hostname: host,
+        port,
+        username: user,
+      });
 
-      connectOptions.authPlugins = { mysql_clear_password: iamTokenPlugin };
+      // eslint-disable-next-line require-jsdoc
+      connectOptions.authPlugins = { mysql_clear_password: () => signer.getAuthToken };
     } else {
       connectOptions.password = options.password;
     }
@@ -216,6 +200,7 @@ class MySqlConnector {
       logger: options.logger,
       usePool,
       useIAM,
+      region,
       maxConnectDelay: options.maxConnectDelay,
       connectRetryTimeout: options.connectRetryTimeout,
       stopped: false,
@@ -341,7 +326,7 @@ class MySqlConnector {
       } catch (error) {
         {
           const { host, port, user, database, ssl } = this.connectOptions;
-          const { useIAM } = this;
+          const { region, useIAM } = this;
           error.options = JSON.stringify({
             host,
             user,
@@ -349,6 +334,7 @@ class MySqlConnector {
             database,
             ssl,
             useIAM,
+            region,
           });
         }
 
