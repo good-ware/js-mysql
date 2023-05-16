@@ -1,11 +1,11 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-await-in-loop */
 
-const { Signer } = require('@aws-sdk/rds-signer');
 const humanizeDuration = require('humanize-duration');
 const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 const parseDuration = require('parse-duration');
+const { Signer } = require('@aws-sdk/rds-signer');
 
 /* Testing
  *
@@ -182,14 +182,14 @@ class MySqlConnector {
     if (useIAM) {
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
       const signer = new Signer({
-        region,
         hostname: host,
         port,
+        region,
         username: user,
       });
 
       // eslint-disable-next-line require-jsdoc
-      connectOptions.authPlugins = { mysql_clear_password: () => signer.getAuthToken };
+      connectOptions.authPlugins = { mysql_clear_password: () => () => signer.getAuthToken() };
     } else {
       connectOptions.password = options.password;
     }
