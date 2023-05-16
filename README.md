@@ -2,7 +2,7 @@
 
 ## Links
 
-- [Release History](https://good-ware.github.io/js-mysql/tutorial-Releases)
+- [Release History](https://good-ware.github.io/js-mysql/tutorial-CHANGELOG)
 - [npm](https://www.npmjs.com/package/@goodware/mysql)
 - [git](https://github.com/good-ware/js-mysql)
 - [API](https://good-ware.github.io/js-mysql/)
