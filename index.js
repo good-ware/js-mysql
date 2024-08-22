@@ -179,8 +179,8 @@ class MySqlConnector {
       multipleStatements: options.multipleStatements,
     };
 
-    if (options.ssl === 'global-bundle') {
-      connectOptions.ssl = { ca: fs.readFileSync(path.join(__dirname, 'global-bundle.pem'));}
+    if (options.ssl === 'Amazon RDS') {
+      connectOptions.ssl = { ca: fs.readFileSync(path.join(__dirname, 'global-bundle.pem')) }
     }
     else if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
 
