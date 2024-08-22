@@ -1,5 +1,9 @@
 # @goodware/mysql Release History
 
+## 5.1.2 2024-08-21
+
+SSL Object support.
+
 ## 5.1.1 2023-05-16
 
 Update documentation
