@@ -1,8 +1,8 @@
 # @goodware/mysql Release History
 
-## 5.1.2 2024-08-21
+## 5.2.0 2024-08-21
 
-SSL Object support.
+Add global-bundle.pem for AWS RDS MySQL
 
 ## 5.1.1 2023-05-16
 
@@ -57,4 +57,3 @@ Update documentation
 
 - Upgrade to parse-duration 1.0.0
 - Remove use of peer dependencies
-

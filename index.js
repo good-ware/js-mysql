@@ -72,7 +72,9 @@ connection`),
     is: true,
     then: Joi.string().required(),
   }).description('Used when useIAM is true. The AWS region name.'),
-  ssl: Joi.alternatives(Joi.string(), Joi.object()).description(`Either Amazon RDS or an object containing ssl-related fields`),
+  ssl: Joi.alternatives(Joi.string(), Joi.object()).description(
+    `Either 'Amazon RDS' or an object containing ssl-related fields`
+  ),
   useIAM: Joi.boolean().description('true to use AWS RDS IAM passwordless security'),
   user: Joi.string().default('root').allow('').description('The database user name'),
   usePool: Joi.boolean().description('true enables connection pooling'),
@@ -180,9 +182,8 @@ class MySqlConnector {
     };
 
     if (options.ssl === 'Amazon RDS') {
-      connectOptions.ssl = { ca: fs.readFileSync(path.join(__dirname, 'global-bundle.pem')) }
-    }
-    else if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
+      connectOptions.ssl = { ca: fs.readFileSync(path.join(__dirname, 'global-bundle.pem')) };
+    } else if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
 
     if (useIAM) {
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378

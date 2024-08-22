@@ -6,5 +6,5 @@ module.exports = {
   database: process.env.DB_DATABASE,
   region: process.env.DB_AWS_REGION || process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION,
   ssl: process.env.DB_SSL, // 'Amazon RDS',
-  useIAM: true
+  useIAM: true,
 };
