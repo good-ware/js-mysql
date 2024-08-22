@@ -6,6 +6,8 @@ const Joi = require('joi');
 const mysql2 = require('mysql2/promise');
 const parseDuration = require('parse-duration');
 const { Signer } = require('@aws-sdk/rds-signer');
+const path = require('path');
+const fs = require('fs');
 
 /* Testing
  *
@@ -177,7 +179,10 @@ class MySqlConnector {
       multipleStatements: options.multipleStatements,
     };
 
-    if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
+    if (options.ssl === 'global-bundle') {
+      connectOptions.ssl = { ca: fs.readFileSync(path.join(__dirname, 'global-bundle.pem'));}
+    }
+    else if (options.ssl !== undefined) connectOptions.ssl = options.ssl;
 
     if (useIAM) {
       // https://stackoverflow.com/questions/58067254/node-mysql2-aws-rds-signer-connection-pooling/60013378#60013378
