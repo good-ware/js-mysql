@@ -1,6 +1,6 @@
 {
   "name": "@goodware/mysql",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "A mysql2-based connection helper",
   "author": "devguy@devguy.com",
   "engines": {
