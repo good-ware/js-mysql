@@ -14,8 +14,9 @@
 ## Features
 
 - Creates database connections via mysql2-promise, optionally from a pool, with exponential backoff retry
-- Handles AWS RDS IAM passwordless connections
-- Optionally manages database transactions by wrapping begin end transaction commands around a function invocation, with an exception handler that executes rollback
+- Handles AWS RDS MySQL IAM passwordless connections
+- Supports AWS RDS MySQL SSL
+- Optionally manages database transactions by wrapping begin and end transaction commands around a function invocation, with an exception handler that executes rollback
 - Same API whether using connection pooling or individual connections
 - Same API whether using explicit or implicit transactions
 
